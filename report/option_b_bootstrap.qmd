@@ -1,0 +1,151 @@
+---
+title: "Seminars in Epi & Biostats: Option B, Bootstrapping"
+subtitle: "Weight change after quitting smoking in the NHEFS cohort"
+author: "Jolene Wium · Student number: XXXXXX000"
+date: today
+format:
+  typst:
+    papersize: a4
+    margin:
+      x: 2.5cm
+      y: 2.5cm
+    fontsize: 11pt
+    section-numbering: "1."
+    include-in-header:
+      text: |
+        #show table.cell: set par(justify: false)
+        #show raw.where(block: true): set text(size: 7.5pt)
+execute:
+  echo: false
+  warning: false
+  message: false
+knitr:
+  opts_knit:
+    root.dir: ".."
+---
+
+```{r}
+#| label: setup
+source("src/analysis.R")
+library(knitr)
+
+r2 <- function(x) sprintf("%.2f", x)
+n1 <- sum(d$qsmk == 1); n0 <- sum(d$qsmk == 0)
+b_q <- coef(fit)[["qsmk"]]
+se_model <- q2$se[1]
+var_ratio <- (resid_sd[["1"]] / resid_sd[["0"]])^2
+```
+
+# Introduction
+
+This report uses `r nrow(d)` participants of the NHEFS cohort to estimate how much more weight people who quit smoking between 1971 and 1982 gained than those who kept smoking, and how uncertain that estimate is. For the **difference in medians** there is no simple standard error: the large-sample variance of a median, $1/(4nf(m)^2)$, depends on the unknown density $f$ at the median. For a **regression coefficient** a standard error exists, but it assumes a correct model with constant error variance. The bootstrap handles both situations. It treats the sample as a stand-in for the population, resamples it with replacement many times, and uses the spread of the recomputed statistic as an estimate of its sampling distribution.
+
+# Methods
+
+**Data.** `r nrow(nhefs) - nrow(d)` of `r nrow(nhefs)` participants had no 1982 weight, so I analysed the `r nrow(d)` complete cases (`r n1` quitters, `r n0` non-quitters). Blood pressure and death were measured after the exposure and could be affected by it, so they were not used.
+
+**Code.** I wrote a short R module (`src/bootstrap.R`, base R only) with four functions:
+
+* `bootstrap()` resamples rows, optionally within groups
+* `boot_se()` returns the bootstrap SE
+* `boot_ci()` returns normal, basic, percentile and BCa intervals
+* `residual_bootstrap()` runs the fixed-X regression bootstrap
+
+`src/analysis.R` runs the full analysis with `set.seed(2026)`. As a check, my intervals agreed with `boot::boot.ci()` to two decimals.
+
+**Q1.** I estimated the difference in median weight change (quitters − non-quitters) and drew B = 10,000 bootstrap samples. The bootstrap SE is the SD of the bootstrap estimates. I formed four 95% intervals:
+
+* *normal:* estimate − bias ± 1.96 SE
+* *basic:* $2\hat\theta - q^*_{0.975}$ to $2\hat\theta - q^*_{0.025}$
+* *percentile:* $q^*_{0.025}$ to $q^*_{0.975}$
+* *BCa:* the percentile interval adjusted for bias and skewness, with the skewness (acceleration) estimated by the jackknife
+
+I repeated this with resampling done within the quitting groups.
+
+**Q2.** I fitted a linear regression of `wt82_71` on `qsmk` and the baseline covariates (sex, race, age, education, smokeintensity, smokeyrs, exercise, active, wt71). Sex, race, education, exercise and active were entered as categorical variables. For the `qsmk` coefficient I compared the model-based SE and CI with two bootstraps, each with B = 5,000 and percentile intervals:
+
+* a **case bootstrap** (random X), which resamples whole rows and refits
+* a **residual bootstrap** (fixed X), which adds resampled residuals to the fitted values and refits
+
+**Q3.** I repeated the Q1 bootstrap 20 times at each B = 100, 500, 1,000, 2,000 and 5,000, and recorded how much the SE and the percentile limits varied between repeats.
+
+# Results
+
+The median quitter gained `r r2(median(d$wt82_71[d$qsmk == 1]))` kg, compared with `r r2(median(d$wt82_71[d$qsmk == 0]))` kg for non-quitters, a difference of **`r r2(b_med$t0)` kg** (bootstrap SE `r r2(boot_se(b_med))`). All intervals exclude zero (@tbl-q1).
+
+```{r}
+#| label: tbl-q1
+#| tbl-cap: "95% bootstrap confidence intervals for the difference in median weight change (kg), B = 10,000."
+kable(q1, col.names = c("Interval", "Ordinary resampling", "Within qsmk groups"),
+      align = "lrr")
+```
+
+```{r}
+#| label: fig-q1
+#| fig-cap: "Bootstrap distribution of the median difference. Solid line: estimate. Dashed lines: percentile limits. Dotted lines: BCa limits."
+#| fig-width: 6
+#| fig-height: 2.4
+par(mar = c(4, 4, 0.5, 0.5), cex = 0.8)
+hist(b_med$t_star, breaks = 100, col = "grey70", border = NA, main = "",
+     xlab = "Median difference (kg)")
+abline(v = b_med$t0, lwd = 2)
+abline(v = boot_ci(b_med, "percentile"), lty = 2, col = "steelblue", lwd = 1.5)
+abline(v = boot_ci(b_med, "bca"), lty = 3, col = "darkorange", lwd = 2)
+```
+
+Adjusted for baseline covariates, quitters gained **`r r2(b_q)` kg** more than non-quitters (@tbl-q2). The case bootstrap SE is `r round(100 * (boot_se(b_case) / se_model - 1))`% larger than the model-based SE. The residual bootstrap SE is almost the same as the model-based one. The residual SD was `r r2(resid_sd[["1"]])` kg in quitters and `r r2(resid_sd[["0"]])` kg in non-quitters.
+
+```{r}
+#| label: tbl-q2
+#| tbl-cap: "Standard error and 95% CI for the qsmk coefficient (kg). Bootstrap intervals are percentile intervals, B = 5,000."
+kable(transform(q2, se = round(se, 3)),
+      col.names = c("Method", "SE", "95% CI"), align = "lrr")
+```
+
+@tbl-q3 shows how much the results change between repeats. The SE is stable from about B = 1,000. The interval limits keep moving by about 0.04 kg even at B = 5,000.
+
+```{r}
+#| label: tbl-q3
+#| tbl-cap: "Monte Carlo error: standard deviation, across 20 repeats, of the bootstrap SE and of the 95% percentile limits for the median difference (kg)."
+kable(q3, digits = 3, col.names = c("B", "SD of SE", "SD of lower limit", "SD of upper limit"),
+      format.args = list(big.mark = ","))
+```
+
+# Discussion
+
+**Interpretation.** Quitters gained more weight than people who kept smoking. The median difference was about `r sprintf("%.1f", b_med$t0)` kg (95% BCa CI `r paste(sprintf("%.1f", boot_ci(b_med, "bca")), collapse = " to ")` kg). After adjustment, the mean difference was about `r sprintf("%.1f", b_q)` kg (95% CI `r paste(sprintf("%.1f", boot_ci(b_case)), collapse = " to ")` kg, case bootstrap).
+
+**Q1: why the intervals differ.** The bootstrap distribution is lumpy (@fig-q1), because weights are recorded to 0.01 kg and a median can only take a limited set of values, and it is not centred exactly on the estimate:
+
+* the *normal* interval ignores this shape
+* the *percentile* interval follows the shape directly
+* the *basic* interval mirrors the percentile interval around the estimate, so the two shift in opposite directions
+* *BCa* corrects the percentile interval for bias and skewness
+
+BCa usually has the best coverage, but its acceleration comes from the jackknife, which works poorly for the median. All four intervals give the same conclusion. Resampling within quitting groups made almost no difference. Because NHEFS is a cohort in which the number of quitters was not fixed in advance, ordinary resampling matches the design better.
+
+**Q2: why the standard errors differ.** The residual bootstrap gives every person an error drawn from the same pool, so, like the model-based formula, it assumes equal variance in everyone. The case bootstrap keeps each person's own residual and only assumes that people are independent. The variance is not equal: quitters' weight change varies more (variance ratio `r r2(var_ratio)`). The model-based and residual-bootstrap SEs are therefore slightly too small, and the case bootstrap is the better choice here, although the difference is small.
+
+**Q3: choice of B.** B = 1,000 is enough for a standard error. Interval limits depend on the extreme tails and need more replicates, so I recommend **B = 10,000**, which the course notes also suggest and which takes only seconds here. For the median, the limits keep moving by about 0.04 kg even at large B because the bootstrap distribution is lumpy, so median intervals are best reported to one decimal place.
+
+**Assumptions and limitations.** The bootstrap assumes the participants are independent and representative of the population, and that the sample is large enough. Both assumptions are reasonable here. The bootstrap can fail:
+
+* in small samples
+* for non-smooth statistics such as a maximum
+* with clustered data, unless whole clusters are resampled
+* when the resampling scheme does not match the data, as the residual bootstrap shows here
+
+The bootstrap only measures sampling variability. It cannot correct for confounding, or for bias from the `r nrow(nhefs) - nrow(d)` people with missing outcomes, so these estimates are adjusted associations, not causal effects.
+
+{{< pagebreak >}}
+
+# Appendix: code {.unnumbered}
+
+```{r}
+#| results: asis
+for (f in c("src/bootstrap.R", "src/analysis.R")) {
+  cat("**", f, "**\n\n```r\n", sep = "")
+  cat(readLines(f), sep = "\n")
+  cat("\n```\n\n")
+}
+```
