@@ -15,6 +15,19 @@ format:
       text: |
         #show table.cell: set par(justify: false)
         #show raw.where(block: true): set text(size: 7.5pt)
+        #set text(fill: rgb("#053259"))
+        #show place.where(scope: "parent"): set par(justify: false)
+        #show heading: set text(fill: rgb("#053259"))
+        #show heading.where(level: 2): set text(fill: rgb("#1668A3"))
+        #show heading.where(level: 3): set text(fill: rgb("#1668A3"))
+        #show link: set text(fill: rgb("#1668A3"))
+        #show figure.caption: set text(fill: rgb("#053259"))
+        #show quote: set text(fill: rgb("#053259"))
+        #set table(
+          stroke: 0.5pt + rgb("#7196B7"),
+          fill: (x, y) => if y == 0 { rgb("#053259") }
+        )
+        #show table.cell.where(y: 0): set text(fill: white, weight: "bold")
 execute:
   echo: false
   warning: false
@@ -28,6 +41,7 @@ knitr:
 #| label: setup
 #| include: false
 #| cache: true
+#| cache.extra: !expr tools::md5sum("src/analysis.R")
 source("src/analysis.R")
 ```
 {{< pagebreak >}}

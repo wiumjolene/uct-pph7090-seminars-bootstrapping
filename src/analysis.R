@@ -5,6 +5,19 @@
 
 library(boot)
 
+# ----- Colour scheme ----------------------------------------------------------
+uct_cols <- c(
+  navy    = "#053259",  # primary: titles, axes
+  blue    = "#1668A3",  # first series
+  teal    = "#12999E",  # second series
+  magenta = "#C32A66",  # callouts / estimates
+  steel   = "#7196B7",  # neutral: reference lines, borders
+  amber   = "#FCB028",  # highlights
+  coral   = "#FA615C"   # alerts
+)
+par(col.main = uct_cols["navy"], col.lab = uct_cols["navy"],
+    col.axis = uct_cols["navy"], fg = uct_cols["navy"])
+
 # ----- Data -------------------------------------------------------------------
 nhefs <- read.csv("data/nhefs_2026.csv")
 dat <- subset(nhefs, !is.na(wt82_71))
@@ -37,11 +50,11 @@ print(median_boot)
 cat("Bootstrap SE (median difference):", round(median_se, 3), "\n")
 print(median_ci)
 
-hist(median_boot$t[, 1], breaks = 40, col = "lightblue",
+hist(median_boot$t[, 1], breaks = 40, col = uct_cols["blue"],
      border = "white", main = "Bootstrap distribution: median difference",
      xlab = "Difference in median weight change (kg)")
-abline(v = median_boot$t0, col = "red", lwd = 2)
-abline(v = 0, lty = 2)
+abline(v = median_boot$t0, col = uct_cols["magenta"], lwd = 2)
+abline(v = 0, lty = 2, col = uct_cols["steel"])
 
 # ----- 2. Regression ----------------------------------------------------------
 cat_vars <- c("sex", "race", "education", "exercise", "active")
@@ -95,12 +108,14 @@ print(comparison, digits = 3, row.names = FALSE)
 
 # Residual diagnostics
 plot(fitted(model), resid(model),
+     pch = 19, cex = 0.6, col = adjustcolor(uct_cols["blue"], alpha.f = 0.5),
      xlab = "Fitted weight change (kg)", ylab = "Residual (kg)",
      main = "Residuals versus fitted values")
-abline(h = 0, col = "red", lty = 2)
+abline(h = 0, col = uct_cols["magenta"], lty = 2, lwd = 2)
 
 boxplot(resid(model) ~ dat$qsmk,
         names = c("Non-quitters", "Quitters"),
+        col = uct_cols[c("blue", "teal")], border = uct_cols["navy"],
         ylab = "Residual (kg)", main = "Residuals by smoking status")
 print(tapply(resid(model), dat$qsmk, sd))
 
@@ -135,7 +150,7 @@ print(tapply(resid(model), dat$qsmk, sd))
 #      xlab = "Bootstrap replicates (B)", ylab = "Bootstrap SE (kg)",
 #      main = "Monte Carlo stability of the case-bootstrap SE")
 
-# cols <- c("steelblue", "darkorange", "darkgreen")
+# cols <- rep_len(uct_cols, n_runs)
 # for (run in seq_len(n_runs)) {
 #   d <- subset(mc_results, Run == run)
 #   lines(d$B, d$SE, type = "b", pch = 19, col = cols[run])
