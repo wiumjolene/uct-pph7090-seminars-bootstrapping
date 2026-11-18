@@ -52,16 +52,40 @@ source("src/analysis.R")
 {{< pagebreak >}}
 
 # Introduction
-> Estimate the difference in weight change between quitters and non-quitters, and its uncertainty, in situations where the standard formulas either don’t exist or might not be appropriate. 
+> _Estimate the difference in weight change between quitters and non-quitters, and its uncertainty, in situations where the standard formulas either don’t exist or might not be appropriate._
 
-This report uses bootstrapping to estimate the uncertainty associated with differences in weight change between participants who quit smoking and those who continued smoking. The analysis uses data from the National Health and Nutrition Examination Survey Epidemiologic Follow-up Study (NHEFS), which followed participants between 1971 and 1982. The outcome of interest is weight change (kg) over this period, while the exposure is smoking cessation status (quitters versus non-quitters). Bootstrapping is used to estimate the standard errors and confidence intervals for the difference in median weight change and to assess uncertainty in covariate-adjusted linear regression estimates.
+This report uses bootstrapping to estimate the uncertainty associated with differences in median weight change between participants who quit smoking and those who continued smoking. The standard error of a median is difficult to calculate and bootstrapping provides a robust alternative.
+
+
+
+The methods section describes how bootstrapping is used for this analysis. The results section presents the findings, and the discussion section interprets the results and discusses limitations.
 
 # Methods
-What you did and why, including the key decisions you made and the
-assumptions of the method. Someone else should be able to repeat your analysis from this section.
+> _What you did and why, including the key decisions you made and the assumptions of the method. Someone else should be able to repeat your analysis from this section._
+
+
+The analysis uses data from the National Health and Nutrition Examination Survey Epidemiologic Follow-up Study (NHEFS). This study followed participants between 1971 and 1982 and observed weight change. The exposure used in this analysis is smoking status (quitters versus non-quitters). 
+
+The analysis method can be divided into four phases: data preparation, descriptive statistics, bootstrapping the difference in median, regression analysis to estimate the adjusted effect of smoking cessation and last, monte carlo method to determine error.
+
+**Data preparation:** Cases with missing values in the weight change (`wt82_71`) variable were excluded from the analysis. In total 62 entries were removed, leaving `r n_total` participants for analysis. 
+
+**Bootstrapping the difference in medians:** 5000 bootstrap samples were drawn with replacement from the original dataset, using the stratified bootstrap method. For each sample, the median weight change was calculated for both quitters and non-quitters, and the difference in medians was computed. The distribution of these differences across all bootstrap samples was used to estimate the standard error and construct confidence intervals.
+
+**Regression to determine the adjusted effect of quitting:** Ordinary least squares regression was used to estimate the adjusted effect of quitting smoking on weight change, controlling for baseline weight and other covariates. The regression model was fitted to each bootstrap sample to obtain a distribution of the adjusted effect estimates.
+
+**Monte Carlo error:** Last, a Monte Carlo simulation was run to determine the variability in the bootstrap estimates due to the finite number of bootstrap samples. This was done by repeating the bootstrapping procedure 20 times and examining the variability in the resulting estimates.
+
+
+
+> Note: NB - Remember to consider sample in groups
+
 
 # Results
-A small number of well-chosen tables and figures, with estimates and measures of uncertainty.
+> A small number of well-chosen tables and figures, with estimates and measures of uncertainty.
+
+
+The number of participants who quit smoking was `r n_quit`, while `r n_cont` participants continued smoking.
 
 
 Of the `r n_total` participants, `r n_quit` (`r round(100 * n_quit / n_total, 1)`%) quit smoking. The median weight change was `r round(med_diff, 2)` kg higher among those who quit smoking (@tbl-groups).
@@ -81,6 +105,84 @@ knitr::kable(tab, align = "lrr", na = "")
 ```
 
 
+
+```{r}
+#| label: tbl-median-boot
+#| tbl-cap: "Bootstrap estimates for the difference in median weight change (quitters − non-quitters), R = 5000, stratified by smoking status"
+#| echo: false
+
+library(knitr)
+library(kableExtra)
+
+median_table <- data.frame(
+  Method   = c("Percentile", "BCa"),
+  Estimate = rep(median_boot$t0, 2),
+  Bias     = rep(mean(median_boot$t[, 1]) - median_boot$t0, 2),
+  SE       = rep(median_se, 2),
+  CI_Lower = c(median_ci$percent[4], median_ci$bca[4]),
+  CI_Upper = c(median_ci$percent[5], median_ci$bca[5])
+)
+
+median_table$CI <- sprintf("(%.2f, %.2f)", median_table$CI_Lower, median_table$CI_Upper)
+
+tab <- kable(median_table[, c("Method", "Estimate", "Bias", "SE", "CI")],
+             digits = 3, align = "lcccc", booktabs = TRUE,
+             col.names = c("CI method", "Estimate (kg)", "Bias", "SE", "95% CI"))
+
+if (knitr::is_html_output() || knitr::is_latex_output()) {
+  tab <- tab |>
+    kable_styling(full_width = FALSE, latex_options = "HOLD_position") |>
+    row_spec(0, bold = TRUE, color = "white", background = "#053259")
+}
+
+tab
+```
+
+
+```{r}
+#| label: fig-median-boot
+#| fig-cap: "Bootstrap distribution of the difference in median weight change (quitters − non-quitters), R = 5000. The solid line is the observed estimate; the dashed line marks zero."
+#| fig-width: 7
+#| fig-height: 4.5
+#| echo: false
+
+par(col.main = uct_cols["navy"], col.lab = uct_cols["navy"],
+    col.axis = uct_cols["navy"], fg = uct_cols["navy"])
+
+hist(median_boot$t[, 1], breaks = 40, col = uct_cols["blue"],
+     border = "white", main = "",
+     xlab = "Difference in median weight change (kg)")
+abline(v = median_boot$t0, col = uct_cols["magenta"], lwd = 2)
+abline(v = 0, lty = 2, col = uct_cols["steel"])
+```
+
+```{r}
+#| label: fig-resid
+#| fig-cap: "Residual diagnostics for the adjusted regression model."
+#| fig-subcap:
+#|   - "Residuals versus fitted values"
+#|   - "Residuals by smoking status"
+#| layout-ncol: 2
+#| fig-width: 5
+#| fig-height: 4.5
+#| echo: false
+
+par(col.main = uct_cols["navy"], col.lab = uct_cols["navy"],
+    col.axis = uct_cols["navy"], fg = uct_cols["navy"])
+
+plot(fitted(model), resid(model),
+     pch = 19, cex = 0.6, col = adjustcolor(uct_cols["blue"], alpha.f = 0.5),
+     xlab = "Fitted weight change (kg)", ylab = "Residual (kg)", main = "")
+abline(h = 0, col = uct_cols["magenta"], lty = 2, lwd = 2)
+
+par(col.main = uct_cols["navy"], col.lab = uct_cols["navy"],
+    col.axis = uct_cols["navy"], fg = uct_cols["navy"])
+
+boxplot(resid(model) ~ dat$qsmk,
+        names = c("Non-quitters", "Quitters"),
+        col = uct_cols[c("blue", "teal")], border = uct_cols["navy"],
+        xlab = "", ylab = "Residual (kg)", main = "")
+```
 
 # Discussion
 Interpret your results in plain language, discuss whether the assumptions of the method are reasonable here, and describe the main limitations.

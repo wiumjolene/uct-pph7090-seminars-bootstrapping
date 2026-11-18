@@ -119,41 +119,41 @@ boxplot(resid(model) ~ dat$qsmk,
         ylab = "Residual (kg)", main = "Residuals by smoking status")
 print(tapply(resid(model), dat$qsmk, sd))
 
-# # ----- 3. Monte Carlo error ---------------------------------------------------
-# B_values <- c(200, 1000, 5000, 10000)
-# n_runs <- 20
-# mc_results <- data.frame()
+# ----- 3. Monte Carlo error ---------------------------------------------------
+B_values <- c(200, 1000, 5000, 10000)
+n_runs <- 20
+mc_results <- data.frame()
 
-# for (B in B_values) {
-#   for (run in seq_len(n_runs)) {
-#     set.seed(100000 + B + run)
-#     result <- boot(dat, regression_coef_fn, R = B)
-#     estimates <- result$t[, 1]
-#     ci <- quantile(estimates, c(0.025, 0.975))
+for (B in B_values) {
+  for (run in seq_len(n_runs)) {
+    set.seed(100000 + B + run)
+    result <- boot(dat, regression_coef_fn, R = B)
+    estimates <- result$t[, 1]
+    ci <- quantile(estimates, c(0.025, 0.975))
 
-#     mc_results <- rbind(mc_results, data.frame(
-#       B = B, Run = run, SE = sd(estimates),
-#       CI_Lower = unname(ci[1]), CI_Upper = unname(ci[2])
-#     ))
-#   }
-# }
-# print(mc_results, digits = 4, row.names = FALSE)
+    mc_results <- rbind(mc_results, data.frame(
+      B = B, Run = run, SE = sd(estimates),
+      CI_Lower = unname(ci[1]), CI_Upper = unname(ci[2])
+    ))
+  }
+}
+print(mc_results, digits = 4, row.names = FALSE)
 
-# # Spread across the three runs for each value of B
-# mc_summary <- aggregate(cbind(SE, CI_Lower, CI_Upper) ~ B,
-#                         data = mc_results,
-#                         FUN = function(x) diff(range(x)))
-# names(mc_summary) <- c("B", "SE_Range", "Lower_CI_Range", "Upper_CI_Range")
-# print(mc_summary, digits = 4, row.names = FALSE)
+# Spread across the three runs for each value of B
+mc_summary <- aggregate(cbind(SE, CI_Lower, CI_Upper) ~ B,
+                        data = mc_results,
+                        FUN = function(x) diff(range(x)))
+names(mc_summary) <- c("B", "SE_Range", "Lower_CI_Range", "Upper_CI_Range")
+print(mc_summary, digits = 4, row.names = FALSE)
 
-# plot(NA, xlim = range(B_values), ylim = range(mc_results$SE), log = "x",
-#      xlab = "Bootstrap replicates (B)", ylab = "Bootstrap SE (kg)",
-#      main = "Monte Carlo stability of the case-bootstrap SE")
+plot(NA, xlim = range(B_values), ylim = range(mc_results$SE), log = "x",
+     xlab = "Bootstrap replicates (B)", ylab = "Bootstrap SE (kg)",
+     main = "Monte Carlo stability of the case-bootstrap SE")
 
-# cols <- rep_len(uct_cols, n_runs)
-# for (run in seq_len(n_runs)) {
-#   d <- subset(mc_results, Run == run)
-#   lines(d$B, d$SE, type = "b", pch = 19, col = cols[run])
-# }
-# legend("topright", legend = paste("Run", seq_len(n_runs)),
-#        col = cols, lty = 1, pch = 19, bty = "n")
+cols <- rep_len(uct_cols, n_runs)
+for (run in seq_len(n_runs)) {
+  d <- subset(mc_results, Run == run)
+  lines(d$B, d$SE, type = "b", pch = 19, col = cols[run])
+}
+legend("topright", legend = paste("Run", seq_len(n_runs)),
+       col = cols, lty = 1, pch = 19, bty = "n")
