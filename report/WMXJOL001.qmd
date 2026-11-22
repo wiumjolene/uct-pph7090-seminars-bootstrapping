@@ -66,7 +66,7 @@ source("src/analysis.R")
 
 This report uses bootstrapping to estimate the uncertainty in the difference in weight change between participants who quit smoking and those who continued smoking. Bootstrapping avoids the need for a complex formula and provides an alternative way to calculate standard errors and confidence intervals. Bootstrapping is also used to check the standard errors from a regression model adjusted for baseline characteristics, because the conventional formula assumes that the error variance is equal for all participants.
 
-The methods section describes how bootstrapping is used for this analysis. The results section presents the findings, and the discussion section interprets the results and discusses limitations.
+The methods section describes how bootstrapping is used for this analysis. The results section presents the findings, and the discussion section interprets the results and discusses study limitations.
 
 
 # Methods
@@ -75,13 +75,15 @@ The methods section describes how bootstrapping is used for this analysis. The r
 
 The analysis uses data from the the first US National Health and Nutrition Examination Survey Epidemiologic Follow-up Study (NHEFS). This study followed 1629 participants between 1971 and 1982 and observed weight change in smokers. The exposure used in this analysis is smoking status (quitters versus non-quitters). 
 
-The analysis method can be divided into four phases: data preparation and descriptive statistics, bootstrapping the difference in median, regression analysis to estimate the adjusted effect of smoking cessation and last and last, monte carlo method to determine error.
+The analysis can be divided into four phases: data preparation and descriptive statistics, bootstrapping the difference in median, regression analysis to estimate the adjusted effect of smoking cessation and last and last, monte carlo method to determine error.
 
-**Data preparation and descriptive statistics:** Cases with missing values in the weight change (`wt82_71`) variable were excluded from the analysis. In total 62 entries were removed, leaving `r n_total` participants for analysis. 
 
-**Bootstrapping the difference in medians:** 5000 bootstrap samples were drawn with replacement from the original dataset, using the stratified bootstrap method. For each sample, the median weight change was calculated for both quitters and non-quitters, and the difference in medians was computed. The distribution of these differences across all bootstrap samples was used to estimate the standard error and construct confidence intervals.
 
-**Regression to determine the adjusted effect of quitting:** Ordinary least squares regression was used to estimate the adjusted effect of quitting smoking on weight change, controlling for baseline weight and other covariates. The regression model was fitted to each bootstrap sample to obtain a distribution of the adjusted effect estimates.
+**Data preparation and descriptive statistics:** In total, data for 1929 participants were recorded. Missing values in the weight change (`wt82_71`) variable were excluded from the analysis (`r pct_missing`%), leaving `r n_total` participants for analysis. 27 of `r n_missing` missing values were from participants who died, biasing the analysis to healthier and younger individuals.
+
+**Bootstrapping the difference in medians:** 5 000 bootstrap samples were drawn with replacement from the original dataset, using the stratified bootstrap method. For each sample, the median weight change was calculated for both quitters and non-quitters, and the difference in medians was computed. The distribution of these differences across all bootstrap samples was used to estimate the standard error and construct confidence intervals.
+
+**Regression to determine the adjusted effect of quitting:** Linear regression was used to estimate the adjusted effect of quitting smoking on weight change, controlling for baseline weight and other covariates. The regression model was fitted to each bootstrap sample to obtain a distribution of the adjusted effect estimates using the fixed (case) and random (residual) approach.
 
 **Monte Carlo error:** Last, a Monte Carlo simulation was run to determine the variability in the bootstrap estimates due to the finite number of bootstrap samples. This was done by repeating the bootstrapping procedure 20 times and examining the variability in the resulting estimates.
 
@@ -94,9 +96,6 @@ Next, the results of the analysis are presented.
 <!-- > A small number of well-chosen tables and figures, with estimates and measures of uncertainty. -->
 
 
-In total, data for 1929 participants were recorded. Missing values in the weight change (`wt82_71`) variable were excluded from the analysis (`r pct_missing`%), leaving `r n_total` participants for analysis. 27 of `r n_missing` missing values were from participants who died, biasing the analysis to healthier and younger individuals.
-
-__Descriptive statistics:__
 Of the `r n_total` participants, `r n_quit` (`r round(100 * n_quit / n_total, 1)`%) quit smoking while `r n_cont` participants continued smoking until 1982. The median weight change was `r round(med_diff, 2)` kg higher among those who quit smoking (`r round(med_quit, 2)` kg) than those who continued smoking (`r round(med_cont, 2)` kg).
 
 Baseline characteristics of quitters and non-quitters are shown in @tbl-baseline ([Appendix A](#sec-appendix-baseline)).
