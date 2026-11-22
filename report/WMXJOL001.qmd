@@ -100,6 +100,8 @@ In total, data for 1929 participants were recorded. Missing values in the weight
 __Descriptive statistics:__
 Of the `r n_total` participants, `r n_quit` (`r round(100 * n_quit / n_total, 1)`%) quit smoking while `r n_cont` participants continued smoking until 1982. The median weight change was `r round(med_diff, 2)` kg higher among those who quit smoking (`r round(med_quit, 2)` kg) than those who continued smoking (`r round(med_cont, 2)` kg).
 
+Baseline characteristics of quitters and non-quitters are shown in @tbl-baseline ([Appendix A](#sec-appendix-baseline)).
+
 __Bootstrapping the difference in medians:__
 Bootsrapping the difference in median weight change between quitters and non-quitters produced a mean estimate of `r round(median_boot$t0, 2)` kg with a standard error of `r round(median_se, 2)` kg. The 95% confidence interval for the difference in medians was estimated to be `r sprintf("(%.2f, %.2f)", median_ci$percent[4], median_ci$percent[5])` kg using the percentile method and `r sprintf("(%.2f, %.2f)", median_ci$bca[4], median_ci$bca[5])` kg using the bias-corrected and accelerated (BCa) method (@tbl-median-boot).
 
@@ -133,6 +135,25 @@ if (knitr::is_html_output() || knitr::is_latex_output()) {
 }
 
 tab
+```
+
+The bootstrap distribution of the median difference is shown in @fig-median-boot.
+
+```{r}
+#| label: fig-median-boot
+#| fig-cap: 'Bootstrap distribution of the difference in median weight change`#linebreak()`{=typst}`#text(size: 0.85em, style: "italic")[R = 5000. Solid line: observed estimate; dashed line: zero]`{=typst}'
+#| fig-width: 7
+#| fig-height: 4.5
+#| echo: false
+
+par(col.main = unname(uct_cols["navy"]), col.lab = unname(uct_cols["navy"]),
+    col.axis = unname(uct_cols["navy"]), fg = unname(uct_cols["navy"]))
+
+hist(median_boot$t[, 1], breaks = 40, col = uct_cols["blue"],
+     border = "white", main = "", xlim = range(c(0, median_boot$t[, 1])),
+     xlab = "Difference in median weight change (kg)")
+abline(v = median_boot$t0, col = uct_cols["magenta"], lwd = 2)
+abline(v = 0, lty = 2, col = uct_cols["steel"], lwd = 2)
 ```
 
 
@@ -192,7 +213,7 @@ boxplot(resid(model) ~ dat$qsmk,
 ```
 
 __Monte Carlo error:__
-To assess Monte Carlo error, the case bootstrap was repeated 20 times for each of $B$ = 200, 1 000, 5 000 and 10 000 replicates. The bootstrap standard error stayed close to the same value for every $B$, but the variability between runs decreased as $B$ increased (@fig-mc-se, [Appendix B](#sec-appendix-mc)). @tbl-mc-summary shows that the range of the standard error and of the 95% confidence interval limits across runs became smaller with more replicates.
+To assess Monte Carlo error, the case bootstrap was repeated 20 times for each of $B$ = 200, 1 000, 5 000 and 10 000 replicates. The bootstrap standard error stayed close to the same value for every $B$, but the variability between runs decreased as $B$ increased (@fig-mc-se, [Appendix C](#sec-appendix-mc)). @tbl-mc-summary shows that the range of the standard error and of the 95% confidence interval limits across runs became smaller with more replicates.
 
 ```{r}
 #| label: tbl-mc-summary
@@ -209,6 +230,11 @@ mc_summary_tab <- data.frame(
 knitr::kable(mc_summary_tab, align = "rrr", row.names = FALSE,
              col.names = c("$B$", "SE", "95% CI"))
 ```
+The variability between runs at $B$ = 5 000 was small, confirming that 5 000 replicates were sufficient for stable standard errors and confidence intervals in this analysis.
+
+Next, the results are interpreted and discussed.
+
+{{< pagebreak >}}
 
 # Discussion
 <!-- > Interpret your results in plain language, discuss whether the assumptions of the method are reasonable here, and describe the main limitations. -->
@@ -224,14 +250,65 @@ The median weight gain among quitters was 1.8 kg (95% BCa CI 0.9 to 2.7 kg) high
 
 **Assumptions and limitations.** The bootstrap assumes that participants are independent and representative of the target population, and that the sample is large enough for the bootstrap distribution to approximate the sampling distribution. These assumptions are reasonable for NHEFS. The bootstrap can fail in small samples, for non-smooth statistics such as a maximum, with clustered data unless whole clusters are resampled, and when the resampling scheme does not match the data.
 
-The bootstrap only measures sampling variability. It cannot correct for confounding or for bias from missing outcomes. Weight change was missing for 63 participants, who were older and more likely to have died during follow-up ([Appendix A](#sec-appendix-missing)), so the results mainly describe healthier survivors. These estimates are adjusted associations, not causal effects.
+The bootstrap only measures sampling variability. It cannot correct for confounding or for bias from missing outcomes. Weight change was missing for 63 participants, who were older and more likely to have died during follow-up ([Appendix B](#sec-appendix-missing)), so the results mainly describe healthier survivors. These estimates are adjusted associations, not causal effects.
 
 
 
 
 {{< pagebreak >}}
 
-# Appendix A: Missing data {#sec-appendix-missing .unnumbered}
+# Appendix A: Baseline characteristics {#sec-appendix-baseline .unnumbered}
+
+```{r}
+#| label: tbl-baseline
+#| tbl-cap: 'Baseline (1971) characteristics by smoking status`#linebreak()`{=typst}`#text(size: 0.85em, style: "italic")[Participants with observed weight change; mean (SD) or n (%)]`{=typst}'
+#| echo: false
+
+bl_quit <- dat$qsmk == 1
+ind <- "   "
+
+bl_mean <- function(x) {
+  c(sprintf("%.1f (%.1f)", mean(x[!bl_quit]), sd(x[!bl_quit])),
+    sprintf("%.1f (%.1f)", mean(x[bl_quit]), sd(x[bl_quit])))
+}
+bl_pct <- function(cond) {
+  c(sprintf("%d (%.1f)", sum(cond[!bl_quit]), 100 * mean(cond[!bl_quit])),
+    sprintf("%d (%.1f)", sum(cond[bl_quit]), 100 * mean(cond[bl_quit])))
+}
+bl_cat <- function(x, labels) {
+  x <- as.character(x)
+  t(sapply(names(labels), function(lv) bl_pct(x == lv)))
+}
+
+edu_lab <- c("1" = "8th grade or less", "2" = "Some high school",
+             "3" = "High school", "4" = "Some college", "5" = "College or more")
+exe_lab <- c("0" = "Much", "1" = "Moderate", "2" = "Little or none")
+act_lab <- c("0" = "Very active", "1" = "Moderately active", "2" = "Inactive")
+
+bl_rows <- rbind(
+  c("Age (years)",              bl_mean(dat$age)),
+  c("Female",                   bl_pct(as.character(dat$sex) == "1")),
+  c("Black or other race",      bl_pct(as.character(dat$race) == "1")),
+  c("Weight (kg)",              bl_mean(dat$wt71)),
+  c("Cigarettes per day",       bl_mean(dat$smokeintensity)),
+  c("Years smoked",             bl_mean(dat$smokeyrs)),
+  c("Education",                "", ""),
+  cbind(paste0(ind, edu_lab),   bl_cat(dat$education, edu_lab)),
+  c("Recreational exercise",    "", ""),
+  cbind(paste0(ind, exe_lab),   bl_cat(dat$exercise, exe_lab)),
+  c("Daily physical activity",  "", ""),
+  cbind(paste0(ind, act_lab),   bl_cat(dat$active, act_lab))
+)
+
+knitr::kable(as.data.frame(bl_rows), align = "lrr", row.names = FALSE,
+             col.names = c("Characteristic",
+                           sprintf("Non-quitters (n = %d)", n_cont),
+                           sprintf("Quitters (n = %d)", n_quit)))
+```
+
+{{< pagebreak >}}
+
+# Appendix B: Missing data {#sec-appendix-missing .unnumbered}
 
 Weight change (`wt82_71`) was missing for `r n_missing` of `r nrow(nhefs)` participants (`r sprintf("%.1f", pct_missing)`%). @tbl-missingness compares their baseline characteristics with those of participants who had an observed outcome.
 
@@ -273,7 +350,7 @@ knitr::kable(
 
 
 
-# Appendix B: Monte Carlo error {#sec-appendix-mc .unnumbered}
+# Appendix C: Monte Carlo error {#sec-appendix-mc .unnumbered}
 
 
 ```{r}
@@ -301,7 +378,7 @@ for (run in seq_len(n_runs)) {
 
 {{< pagebreak >}}
 
-# Appendix C: Code {#sec-appendix-code .unnumbered}
+# Appendix D: Code {#sec-appendix-code .unnumbered}
 
 
 ```{r}
