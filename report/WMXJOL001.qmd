@@ -95,13 +95,10 @@ Next, the results of the analysis are presented.
 # Results
 <!-- > A small number of well-chosen tables and figures, with estimates and measures of uncertainty. -->
 
-
-Of the `r n_total` participants, `r n_quit` (`r round(100 * n_quit / n_total, 1)`%) quit smoking while `r n_cont` participants continued smoking until 1982. The median weight change was `r round(med_diff, 2)` kg higher among those who quit smoking (`r round(med_quit, 2)` kg) than those who continued smoking (`r round(med_cont, 2)` kg).
-
-Baseline characteristics of quitters and non-quitters are shown in @tbl-baseline ([Appendix A](#sec-appendix-baseline)).
+Of the `r n_total` participants, `r n_quit` (`r round(100 * n_quit / n_total, 1)`%) quit smoking while `r n_cont` participants continued smoking until 1982. The median weight change was `r round(med_diff, 2)` kg higher among those who quit smoking (`r round(med_quit, 2)` kg) than those who continued smoking (`r round(med_cont, 2)` kg). Baseline characteristics of quitters and non-quitters are shown in @tbl-baseline ([Appendix A](#sec-appendix-baseline)).
 
 __Bootstrapping the difference in medians:__
-Bootsrapping the difference in median weight change between quitters and non-quitters produced a mean estimate of `r round(median_boot$t0, 2)` kg with a standard error of `r round(median_se, 2)` kg. The 95% confidence interval for the difference in medians was estimated to be `r sprintf("(%.2f, %.2f)", median_ci$percent[4], median_ci$percent[5])` kg using the percentile method and `r sprintf("(%.2f, %.2f)", median_ci$bca[4], median_ci$bca[5])` kg using the bias-corrected and accelerated (BCa) method (@tbl-median-boot).
+The observed difference in median weight change between quitters and non-quitters was `r round(median_boot$t0, 2)` kg. Bootstrapping gave a standard error of `r round(median_se, 2)` kg. The 95% confidence interval for the difference in medians was `r sprintf("%.2f to %.2f", median_ci$percent[4], median_ci$percent[5])` kg using the percentile method and `r sprintf("%.2f to %.2f", median_ci$bca[4], median_ci$bca[5])` kg using the bias-corrected and accelerated (BCa) method (@tbl-median-boot, @fig-median-boot).
 
 ```{r}
 #| label: tbl-median-boot
