@@ -64,9 +64,7 @@ source("src/analysis.R")
 # Introduction
 <!-- > _Estimate the difference in weight change between quitters and non-quitters, and its uncertainty, in situations where the standard formulas either don’t exist or might not be appropriate._ -->
 
-This report uses bootstrapping to estimate the uncertainty associated with differences in median weight change between participants who quit smoking and those who continued smoking. The standard error of a median is difficult to calculate and bootstrapping provides a robust alternative.
-
-
+This report uses bootstrapping to estimate the uncertainty associated with differences in median weight change between participants who quit smoking and those who continued smoking. 
 
 The methods section describes how bootstrapping is used for this analysis. The results section presents the findings, and the discussion section interprets the results and discusses limitations.
 
@@ -142,8 +140,9 @@ The bootstrap distribution of the median difference is shown in @fig-median-boot
 ```{r}
 #| label: fig-median-boot
 #| fig-cap: 'Bootstrap distribution of the difference in median weight change`#linebreak()`{=typst}`#text(size: 0.85em, style: "italic")[R = 5000. Solid line: observed estimate; dashed line: zero]`{=typst}'
-#| fig-width: 7
-#| fig-height: 4.5
+#| fig-width: 6
+#| fig-height: 3.5
+#| out-width: "75%"
 #| echo: false
 
 par(col.main = unname(uct_cols["navy"]), col.lab = unname(uct_cols["navy"]),
