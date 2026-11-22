@@ -51,7 +51,7 @@ source("src/analysis.R")
 #counter(page).update(2)
 ```
 
-# Plagiarism Declaration
+# Plagiarism Declaration {.unnumbered}
 
 
 ```{=typst}
@@ -190,7 +190,7 @@ boxplot(resid(model) ~ dat$qsmk,
 ```
 
 __Monte Carlo error:__
-To assess Monte Carlo error, the case bootstrap was repeated 20 times for each of $B$ = 200, 1 000, 5 000 and 10 000 replicates. The bootstrap standard error stayed close to the same value for every $B$, but the variability between runs decreased as $B$ increased (@fig-mc-se, [Appendix C](#sec-appendix-mc)). @tbl-mc-summary shows that the range of the standard error and of the 95% confidence interval limits across runs became smaller with more replicates.
+To assess Monte Carlo error, the case bootstrap was repeated 20 times for each of $B$ = 200, 1 000, 5 000 and 10 000 replicates. The bootstrap standard error stayed close to the same value for every $B$, but the variability between runs decreased as $B$ increased (@fig-mc-se, [Appendix B](#sec-appendix-mc)). @tbl-mc-summary shows that the range of the standard error and of the 95% confidence interval limits across runs became smaller with more replicates.
 
 ```{r}
 #| label: tbl-mc-summary
@@ -269,23 +269,9 @@ knitr::kable(
 
 {{< pagebreak >}}
 
-# Appendix B: Code {.unnumbered}
 
 
-```{r}
-#| results: asis
-for (f in c("src/analysis.R")) {
-  cat("**", f, "**\n\n```r\n", sep = "")
-  cat(readLines(f), sep = "\n")
-  cat("\n```\n\n")
-}
-```
-
-{{< pagebreak >}}
-
-
-
-# Appendix C: Monte Carlo Error {#sec-appendix-mc .unnumbered}
+# Appendix B: Monte Carlo error {#sec-appendix-mc .unnumbered}
 
 
 ```{r}
@@ -308,5 +294,19 @@ for (run in seq_len(n_runs)) {
   d <- subset(mc_results, Run == run)
   lines(d$B, d$SE, type = "b", pch = 19, cex = 0.7,
         col = adjustcolor(mc_line_cols[run], alpha.f = 0.7))
+}
+```
+
+{{< pagebreak >}}
+
+# Appendix C: Code {#sec-appendix-code .unnumbered}
+
+
+```{r}
+#| results: asis
+for (f in c("src/analysis.R")) {
+  cat("**", f, "**\n\n```r\n", sep = "")
+  cat(readLines(f), sep = "\n")
+  cat("\n```\n\n")
 }
 ```
