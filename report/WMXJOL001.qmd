@@ -128,11 +128,11 @@ tab
 
 __Regression to determine the adjusted effect of quitting:__
 
-Conventional OLS assumes the residuals has homoscedasticity, are independent and normally distributed. 
+Conventional OLS assumes that the errors are independent, normally distributed and have constant variance.
 
-Case bootstrap resamples whole participants with replacement, treating the predictors as random. It refits the model 5000 times and use the spread of the coefficients to determine the standard error, resulting in a slighlty wider confidence interval. An advantage is that it can be employed under heteroscedasticity and it does not assume constant variance. 
+The case bootstrap resamples whole participants with replacement, treating the predictors as random. The model was refitted to 5000 resamples, and the spread of the `qsmk` coefficients was used to estimate the standard error. Because it does not assume constant variance, it remains valid under heteroscedasticity. In this analysis it produced a slightly wider confidence interval than the other two methods.
 
-Residual bootstrap treats the covariates as fixed, keeping the predictors as the observed values. It uses the fitted values from the model and resamples from the residuals. The confidence interval is slightly narrower than the case bootstrap, but it assumes that the model is correctly specified and that the residuals are independent and identically distributed.
+The residual bootstrap treats the predictors as fixed at their observed values. Residuals from the fitted model are resampled with replacement, added back to the fitted values, and the model is refitted. It does not assume normality, but it does assume that the model is correctly specified and that the errors are independent and identically distributed, which implies constant variance. In this analysis its confidence interval was slightly narrower than that of the case bootstrap.
 
 
 ```{r}
