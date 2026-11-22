@@ -1,6 +1,6 @@
 ---
 title: "Seminars in Epidemiology & Biostatistics: Bootstrapping"
-subtitle: "Weight change after quitting smoking in the NHEFS cohort"
+subtitle: "Weight change between 1971 and 1982 in a smoking population"
 author: "Jolene Wium (WMXJOL001)"
 date: today
 format:
@@ -48,6 +48,7 @@ source("src/missing_data.R")
 ```
 
 ```{=typst}
+#place(bottom + center)[#text(size: 14pt)[PPH7090S]]
 #set page(numbering: "i")
 #counter(page).update(2)
 ```
@@ -76,7 +77,7 @@ I declare that in the preparation of this assignment, I used Claude (model Opus 
 
 1. Clarifying statistical concepts (e.g., interpretation, model fit metrics),
 2. Refining R code snippets.
-3. Formatting tables and figures in Quartro.
+3. Formatting tables and figures in Quarto.
 
 All statistical analyses, interpretation of results, and final critical reflections were conducted by me.
 The AI tool did not generate findings, nor did it substitute for my own analysis, understanding, or judgment. I have reviewed and edited the outputs to ensure accuracy, appropriateness, and alignment with the course requirements.
@@ -84,6 +85,7 @@ The AI tool did not generate findings, nor did it substitute for my own analysis
 
 ```{=typst}
 #pagebreak()
+#show outline.entry: set block(spacing: 1.2em)
 #outline(title: [Contents], depth: 2, indent: auto)
 #set page(numbering: "1")
 #counter(page).update(1)
@@ -135,19 +137,16 @@ library(knitr)
 library(kableExtra)
 
 median_table <- data.frame(
-  Method   = c("Percentile", "BCa"),
-  Estimate = rep(median_boot$t0, 2),
-  Bias     = rep(mean(median_boot$t[, 1]) - median_boot$t0, 2),
-  SE       = rep(median_se, 2),
-  CI_Lower = c(median_ci$percent[4], median_ci$bca[4]),
-  CI_Upper = c(median_ci$percent[5], median_ci$bca[5])
+  Estimate = sprintf("%.2f", median_boot$t0),
+  Bias     = sprintf("%.3f", mean(median_boot$t[, 1]) - median_boot$t0),
+  SE       = sprintf("%.3f", median_se),
+  CI_perc  = sprintf("(%.2f, %.2f)", median_ci$percent[4], median_ci$percent[5]),
+  CI_bca   = sprintf("(%.2f, %.2f)", median_ci$bca[4], median_ci$bca[5])
 )
 
-median_table$CI <- sprintf("(%.2f, %.2f)", median_table$CI_Lower, median_table$CI_Upper)
-
-tab <- kable(median_table[, c("Method", "Estimate", "Bias", "SE", "CI")],
-             digits = 3, align = "lrrrr", booktabs = TRUE,
-             col.names = c("CI method", "Estimate (kg)", "Bias", "SE", "95% CI"))
+tab <- kable(median_table, align = "rrrrr", booktabs = TRUE, row.names = FALSE,
+             col.names = c("Estimate (kg)", "Bias", "SE",
+                           "95% CI (percentile)", "95% CI (BCa)"))
 
 if (knitr::is_html_output() || knitr::is_latex_output()) {
   tab <- tab |>
@@ -246,12 +245,12 @@ __Monte Carlo error:__ Monte Carlo error is the random variation in a bootstrap 
 mc_summary_tab <- data.frame(
   B        = format(mc_summary$B, big.mark = "\u00a0"),
   SE       = sprintf("%.4f", mc_summary$SE_Range),
-  CI       = sprintf("%.3f, %.3f", mc_summary$Lower_CI_Range,
-                     mc_summary$Upper_CI_Range)
+  CI_Lower = sprintf("%.3f", mc_summary$Lower_CI_Range),
+  CI_Upper = sprintf("%.3f", mc_summary$Upper_CI_Range)
 )
 
-knitr::kable(mc_summary_tab, align = "rrr", row.names = FALSE,
-             col.names = c("$B$", "SE", "95% CI"))
+knitr::kable(mc_summary_tab, align = "rrrr", row.names = FALSE,
+             col.names = c("$B$", "SE", "95% CI lower limit", "95% CI upper limit"))
 ```
 The variability between runs at $B$ = 5 000 was small, confirming that 5 000 replicates were sufficient for stable standard errors and confidence intervals in this analysis.
 
@@ -263,11 +262,12 @@ Next, the results are interpreted and discussed.
 <!-- > Interpret your results in plain language, discuss whether the assumptions of the method are reasonable here, and describe the main limitations. -->
 
 
-The median weight gain among quitters was 1.8 kg (95% BCa CI 0.9 to 2.7 kg) higher than among participants who continued smoking. After adjusting for sex, race, age, education, smoking intensity, years of smoking, exercise, physical activity and baseline weight, quitters gained on average 3.4 kg more (95% CI 2.5 to 4.3 kg, case bootstrap).
+The median weight gain among quitters was 1.8 kg (95% BCa CI 0.9 to 2.7 kg) higher than among non-quitters. After adjusting for sex, race, age, education, smoking intensity, years of smoking, exercise, physical activity and baseline weight, quitters gained on average 3.4 kg more (95% CI 2.5 to 4.3 kg, case bootstrap).
 
-**Confidence intervals for the median difference.** Both the percentile and BCa methods gave similar confidence intervals for the difference in medians. The BCa method is preferred because it corrects for bias and skewness in the bootstrap distribution.
 
-**The adjusted effect standard errors.** The case bootstrap resamples whole participants, and only assumes that participants are independent. The residual bootstrap and the conventional linear regression formula also assume that every participant has the same error variance. The case bootstrap is preferred because it relies on the fewest assumptions. It gave a slightly larger standard error, suggesting the equal-variance assumption may not fully hold, although all three methods give the same conclusion.
+**Confidence intervals for the median difference.** Both the percentile and BCa methods gave similar confidence intervals for the difference in medians. The BCa method is preferred because it corrects for bias and skewness in the bootstrap distribution. However, the median is not a smooth statistic (@fig-median-boot), so the BCa adjustment may be less reliable; the similar percentile interval supports the result.
+
+**The adjusted effect standard errors.** The case bootstrap resamples whole participants, and only assumes that participants are independent. The residual bootstrap and the conventional linear regression formula also assume that every participant has the same error variance. The case bootstrap is preferred because it relies on the fewest assumptions. Its standard error was slightly larger (`r sprintf("%.3f", case_se)` vs `r sprintf("%.3f", coef(summary(model))["qsmk", "Std. Error"])` kg). The difference of `r sprintf("%.3f", case_se - coef(summary(model))["qsmk", "Std. Error"])` kg is about twice the run-to-run range of the case-bootstrap SE at $B$ = 5 000 (`r sprintf("%.3f", mc_summary$SE_Range[mc_summary$B == 5000])` kg; @tbl-mc-summary), so it is unlikely to be Monte Carlo error alone and points to mild heteroscedasticity that the residual plots (@fig-resid) are not sensitive enough to show, although all three methods give the same conclusion.
 
 **Choice of $B$.** The variability of the case bootstrap standard error and confidence limits across repeated runs decreased as $B$ increased (@tbl-mc-summary). Confidence limits depend on the tails of the bootstrap distribution and need more replicates than the standard error. $B$ = 5 000 is sufficient for reporting intervals.
 
@@ -337,7 +337,7 @@ Weight change (`wt82_71`) was missing for `r n_missing` of `r nrow(nhefs)` parti
 
 ```{r}
 #| label: tbl-missingness
-#| tbl-cap: 'Baseline characteristics of participants with missing and observed weight change`#linebreak()`{=typst}`#text(size: 0.85em, style: "italic")[Mean, except n (%) for died and median [IQR] for income category (ordinal code). SMD = standardised mean difference. p-values from Welch t-tests, except Fisher''s exact test (died) and Wilcoxon rank-sum test (income)]`{=typst}'
+#| tbl-cap: 'Baseline characteristics of participants with missing and observed weight change'
 #| echo: false
 
 miss_labels <- c(
@@ -389,6 +389,8 @@ knitr::kable(
                 "SMD", "p")
 )
 ```
+
+Values are means, except n (%) for death during follow-up and median [IQR] for income category, which is an ordinal code. SMD is the standardised mean difference. p-values are from Welch t-tests, except Fisher's exact test for death and the Wilcoxon rank-sum test for income.
 
 {{< pagebreak >}}
 
