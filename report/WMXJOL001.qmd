@@ -105,13 +105,11 @@ The analysis uses data from the first US National Health and Nutrition Examinati
 
 The analysis can be divided into four phases: data preparation and descriptive statistics, bootstrapping the difference in medians, regression analysis to estimate the adjusted effect of smoking cessation and, last, the Monte Carlo method to determine error.
 
-
-
 **Data preparation and descriptive statistics:** In total, data for `r nrow(nhefs)` participants were recorded. Missing values in the weight change (`wt82_71`) variable were excluded from the analysis (`r n_missing` participants, `r sprintf("%.1f", pct_missing)`%), leaving `r n_total` participants for analysis.
 
 **Bootstrapping the difference in medians:** 5 000 bootstrap samples were drawn with replacement from the original dataset, using a stratified bootstrap: quitters and non-quitters were resampled separately, so that each resample kept the observed number of quitters and non-quitters. This keeps the precision of each group's median the same as in the observed data and prevents resamples in which one group, particularly the smaller quitter group, is under represented. For each sample, the median weight change was calculated for both quitters and non-quitters, and the difference in medians was computed. The distribution of these differences across all bootstrap samples was used to estimate the standard error and construct confidence intervals.
 
-**Regression to determine the adjusted effect of quitting:** Linear regression was used to estimate the adjusted effect of quitting smoking on weight change, adjusting for sex, race, age, education, smoking intensity (cigarettes per day), years of smoking, recreational exercise, daily physical activity and baseline (1971) weight. The regression model was fitted to each bootstrap sample to obtain a distribution of the adjusted effect estimates using the fixed (case) and random (residual) approach.
+**Regression to determine the adjusted effect of quitting:** Linear regression was used to estimate the adjusted effect of quitting smoking on weight change, adjusting for sex, race, age, education, smoking intensity (cigarettes per day), years of smoking, recreational exercise, daily physical activity and baseline (1971) weight. The regression model was fitted to each bootstrap sample to obtain a distribution of the adjusted effect estimates using the fixed (residual) and random (case) approach.
 
 **Monte Carlo error:** Last, a Monte Carlo simulation was run to determine the variability in the bootstrap estimates due to the finite number of bootstrap samples. This was done by repeating the bootstrapping procedure 20 times and examining the variability in the resulting estimates.
 
@@ -267,7 +265,7 @@ Next, the results are interpreted and discussed.
 
 The median weight gain among quitters was 1.8 kg (95% BCa CI 0.9 to 2.7 kg) higher than among participants who continued smoking. After adjusting for sex, race, age, education, smoking intensity, years of smoking, exercise, physical activity and baseline weight, quitters gained on average 3.4 kg more (95% CI 2.5 to 4.3 kg, case bootstrap).
 
-**Confidence intervals for the median difference.** Both the percentile and BCa methods gave similar confidence intervals for the difference in medians, which were slightly wider than the normal approximation. The BCa method is preferred because it corrects for bias and skewness in the bootstrap distribution.
+**Confidence intervals for the median difference.** Both the percentile and BCa methods gave similar confidence intervals for the difference in medians. The BCa method is preferred because it corrects for bias and skewness in the bootstrap distribution.
 
 **The adjusted effect standard errors.** The case bootstrap resamples whole participants, and only assumes that participants are independent. The residual bootstrap and the conventional linear regression formula also assume that every participant has the same error variance. The case bootstrap is preferred because it relies on the fewest assumptions. It gave a slightly larger standard error, suggesting the equal-variance assumption may not fully hold, although all three methods give the same conclusion.
 
@@ -339,7 +337,7 @@ Weight change (`wt82_71`) was missing for `r n_missing` of `r nrow(nhefs)` parti
 
 ```{r}
 #| label: tbl-missingness
-#| tbl-cap: 'Baseline characteristics of participants with missing and observed weight change`#linebreak()`{=typst}`#text(size: 0.85em, style: "italic")[Mean, except n (%) for died and median [IQR] for income category (ordinal code). SMD = standardised mean difference. p-values from Welch t-tests, except Fisher's exact test (died) and Wilcoxon rank-sum test (income)]`{=typst}'
+#| tbl-cap: 'Baseline characteristics of participants with missing and observed weight change`#linebreak()`{=typst}`#text(size: 0.85em, style: "italic")[Mean, except n (%) for died and median [IQR] for income category (ordinal code). SMD = standardised mean difference. p-values from Welch t-tests, except Fisher''s exact test (died) and Wilcoxon rank-sum test (income)]`{=typst}'
 #| echo: false
 
 miss_labels <- c(

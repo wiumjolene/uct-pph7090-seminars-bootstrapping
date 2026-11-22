@@ -1,0 +1,438 @@
+---
+title: "Seminars in Epidemiology & Biostatistics: Bootstrapping"
+subtitle: "Weight change after quitting smoking in the NHEFS cohort"
+author: "Jolene Wium (WMXJOL001)"
+date: today
+format:
+  typst:
+    papersize: a4
+    margin:
+      x: 2.5cm
+      y: 2.5cm
+    fontsize: 11pt
+    section-numbering: "1."
+    page-numbering: false
+    include-in-header:
+      text: |
+        #show table.cell: set par(justify: false)
+        #show raw.where(block: true): set text(size: 7.5pt)
+        #set text(fill: rgb("#053259"))
+        #show place.where(scope: "parent"): set par(justify: false)
+        #show heading: set text(fill: rgb("#053259"))
+        #show heading.where(level: 2): set text(fill: rgb("#1668A3"))
+        #show heading.where(level: 3): set text(fill: rgb("#1668A3"))
+        #show link: set text(fill: rgb("#1668A3"))
+        #show figure.caption: set text(fill: rgb("#053259"))
+        #show quote: set text(fill: rgb("#053259"))
+        #set table(
+          stroke: (x, y) => if y == 0 { (bottom: 0.5pt + rgb("#053259")) },
+          inset: (x: 8pt, y: 4pt)
+        )
+        #show table.cell.where(y: 0): set text(weight: "regular")
+execute:
+  echo: false
+  warning: false
+  message: false
+knitr:
+  opts_knit:
+    root.dir: ".."
+---
+
+```{r}
+#| label: setup
+#| include: false
+#| cache: true
+#| cache.extra: !expr tools::md5sum(c("src/analysis.R", "src/missing_data.R"))
+source("src/analysis.R")
+source("src/missing_data.R")
+```
+
+```{=typst}
+#set page(numbering: "i")
+#counter(page).update(2)
+```
+
+# Plagiarism Declaration {.unnumbered}
+
+I acknowledge that plagiarism is a serious form of academic misconduct and dishonesty.
+
+I have read and understood the document, ‘Avoiding Plagiarism: A guide for students’ from
+the University of Cape Town. I acknowledge that I understand that the utilisation of open
+AI tools (such as ChatGPT) without proper acknowledgement and citation is also a form
+of academic misconduct and is not allowed. 
+
+I acknowledge and accept the institutional
+penalties that are applied if I should plagiarise in any submitted work. 
+
+I have been warned
+that for coursework assessment: first-time and minor misconduct breaches will result in a
+mark deduction and warning; and any repeat or major misconduct breaches will result in a
+failing grade and possible escalation to the Faculty Misconduct Committee (at the course
+convenor’s discretion).
+
+
+# AI Tools Declaration  {.unnumbered}
+I declare that in the preparation of this assignment, I used Claude (model Opus 5.5) as a support tool. The tool was used for assistance with:
+
+1. Clarifying statistical concepts (e.g., interpretation, model fit metrics),
+2. Refining R code snippets.
+3. Formatting tables and figures in Quartro.
+
+All statistical analyses, interpretation of results, and final critical reflections were conducted by me.
+The AI tool did not generate findings, nor did it substitute for my own analysis, understanding, or judgment. I have reviewed and edited the outputs to ensure accuracy, appropriateness, and alignment with the course requirements.
+
+
+```{=typst}
+#pagebreak()
+#outline(title: [Contents], depth: 2, indent: auto)
+#set page(numbering: "1")
+#counter(page).update(1)
+```
+
+# Introduction
+<!-- > _Estimate the difference in weight change between quitters and non-quitters, and its uncertainty, in situations where the standard formulas either don’t exist or might not be appropriate._ -->
+
+This report uses bootstrapping to estimate the uncertainty in the difference in weight change between participants who quit smoking and those who continued smoking. Bootstrapping avoids the need for a complex formula and provides an alternative way to calculate standard errors and confidence intervals. Bootstrapping is also used to check the standard errors from a regression model adjusted for baseline characteristics, because the conventional formula assumes that the error variance is equal for all participants.
+
+The methods section describes how bootstrapping is used for this analysis. The results section presents the findings, and the discussion section interprets the results and discusses study limitations.
+
+
+# Methods
+<!-- > _What you did and why, including the key decisions you made and the assumptions of the method. Someone else should be able to repeat your analysis from this section._ -->
+
+
+The analysis uses data from the first US National Health and Nutrition Examination Survey Epidemiologic Follow-up Study (NHEFS). This study followed 1629 participants between 1971 and 1982 and observed weight change in smokers. The exposure used in this analysis is smoking status (quitters versus non-quitters). 
+
+The analysis can be divided into four phases: data preparation and descriptive statistics, bootstrapping the difference in medians, regression analysis to estimate the adjusted effect of smoking cessation and, last, the Monte Carlo method to determine error.
+
+
+
+**Data preparation and descriptive statistics:** In total, data for `r nrow(nhefs)` participants were recorded. Missing values in the weight change (`wt82_71`) variable were excluded from the analysis (`r n_missing` participants, `r sprintf("%.1f", pct_missing)`%), leaving `r n_total` participants for analysis.
+
+**Bootstrapping the difference in medians:** 5 000 bootstrap samples were drawn with replacement from the original dataset, using a stratified bootstrap: quitters and non-quitters were resampled separately, so that each resample kept the observed number of quitters and non-quitters. This keeps the precision of each group's median the same as in the observed data and prevents resamples in which one group, particularly the smaller quitter group, is under represented. For each sample, the median weight change was calculated for both quitters and non-quitters, and the difference in medians was computed. The distribution of these differences across all bootstrap samples was used to estimate the standard error and construct confidence intervals.
+
+**Regression to determine the adjusted effect of quitting:** Linear regression was used to estimate the adjusted effect of quitting smoking on weight change, adjusting for sex, race, age, education, smoking intensity (cigarettes per day), years of smoking, recreational exercise, daily physical activity and baseline (1971) weight. The regression model was fitted to each bootstrap sample to obtain a distribution of the adjusted effect estimates using the fixed (case) and random (residual) approach.
+
+**Monte Carlo error:** Last, a Monte Carlo simulation was run to determine the variability in the bootstrap estimates due to the finite number of bootstrap samples. This was done by repeating the bootstrapping procedure 20 times and examining the variability in the resulting estimates.
+
+Next, the results of the analysis are presented.
+
+<!-- > Note: NB - Remember to consider sample in groups -->
+
+
+# Results
+<!-- > A small number of well-chosen tables and figures, with estimates and measures of uncertainty. -->
+
+Of the `r n_total` participants, `r n_quit` (`r round(100 * n_quit / n_total, 1)`%) quit smoking while `r n_cont` participants continued smoking until 1982. The median weight change was `r round(med_diff, 2)` kg higher among those who quit smoking (`r round(med_quit, 2)` kg) than those who continued smoking (`r round(med_cont, 2)` kg). Baseline characteristics of quitters and non-quitters are shown in @tbl-baseline ([Appendix A](#sec-appendix-baseline)).
+
+__Bootstrapping the difference in medians:__
+The observed difference in median weight change between quitters and non-quitters was `r round(median_boot$t0, 2)` kg. Bootstrapping gave a standard error of `r round(median_se, 2)` kg. The 95% confidence interval for the difference in medians was `r sprintf("%.2f to %.2f", median_ci$percent[4], median_ci$percent[5])` kg using the percentile method and `r sprintf("%.2f to %.2f", median_ci$bca[4], median_ci$bca[5])` kg using the bias-corrected and accelerated (BCa) method (@tbl-median-boot, @fig-median-boot).
+
+```{r}
+#| label: tbl-median-boot
+#| tbl-cap: 'Bootstrap estimates for the difference in median weight change'
+#| echo: false
+
+library(knitr)
+library(kableExtra)
+
+median_table <- data.frame(
+  Method   = c("Percentile", "BCa"),
+  Estimate = rep(median_boot$t0, 2),
+  Bias     = rep(mean(median_boot$t[, 1]) - median_boot$t0, 2),
+  SE       = rep(median_se, 2),
+  CI_Lower = c(median_ci$percent[4], median_ci$bca[4]),
+  CI_Upper = c(median_ci$percent[5], median_ci$bca[5])
+)
+
+median_table$CI <- sprintf("(%.2f, %.2f)", median_table$CI_Lower, median_table$CI_Upper)
+
+tab <- kable(median_table[, c("Method", "Estimate", "Bias", "SE", "CI")],
+             digits = 3, align = "lrrrr", booktabs = TRUE,
+             col.names = c("CI method", "Estimate (kg)", "Bias", "SE", "95% CI"))
+
+if (knitr::is_html_output() || knitr::is_latex_output()) {
+  tab <- tab |>
+    kable_styling(full_width = FALSE, latex_options = "HOLD_position") |>
+    row_spec(0, bold = TRUE, color = "white", background = "#053259")
+}
+
+tab
+```
+
+The bootstrap distribution of the median difference is shown in @fig-median-boot.
+
+```{r}
+#| label: fig-median-boot
+#| fig-cap: 'Bootstrap distribution of the difference in median weight change'
+#| fig-width: 6
+#| fig-height: 3.5
+#| out-width: "75%"
+#| echo: false
+
+par(col.main = unname(uct_cols["navy"]), col.lab = unname(uct_cols["navy"]),
+    col.axis = unname(uct_cols["navy"]), fg = unname(uct_cols["navy"]))
+
+hist(median_boot$t[, 1], breaks = 40, col = uct_cols["blue"],
+     border = "white", main = "", xlim = range(c(0, median_boot$t[, 1])),
+     xlab = "Difference in median weight change (kg)")
+abline(v = median_boot$t0, col = uct_cols["magenta"], lwd = 2)
+abline(v = 0, lty = 2, col = uct_cols["steel"], lwd = 2)
+```
+
+
+__Regression to determine the adjusted effect of quitting:__
+
+The adjusted linear regression estimated that quitters gained on average `r sprintf("%.2f", coef(model)["qsmk"])` kg more than non-quitters. @tbl-regression-boot compares three ways of estimating the uncertainty of this coefficient: the linear regression formula, the case bootstrap and the residual bootstrap. The conventional formula assumes that the errors are independent, normally distributed and have constant variance.
+
+The case bootstrap resamples whole participants with replacement, treating the predictors as random. The model was refitted to 5000 resamples, and the spread of the `qsmk` coefficients was used to estimate the standard error. Because it does not assume constant variance, it remains valid under heteroscedasticity. In this analysis it produced a slightly wider confidence interval than the other two methods.
+
+The residual bootstrap treats the predictors as fixed at their observed values. Residuals from the fitted model are resampled with replacement, added back to the fitted values, and the model is refitted, again 5000 times. It does not assume normality, but it does assume that the model is correctly specified and that the errors are independent and identically distributed, which implies constant variance. In this analysis its confidence interval was slightly narrower than that of the case bootstrap.
+
+
+```{r}
+#| label: tbl-regression-boot
+#| tbl-cap: 'Adjusted effect of quitting smoking on weight change`#linebreak()`{=typst}`#text(size: 0.85em, style: "italic")[Conventional vs bootstrap standard errors; R = 5000, percentile 95% CIs for bootstrap methods]`{=typst}'
+#| echo: false
+
+comparison_tab <- data.frame(
+  Method   = comparison$Method,
+  Estimate = sprintf("%.2f", comparison$Estimate),
+  SE       = sprintf("%.3f", comparison$SE),
+  CI       = sprintf("(%.2f, %.2f)", comparison$CI_Lower, comparison$CI_Upper)
+)
+
+knitr::kable(comparison_tab, align = "lrrr", row.names = FALSE,
+             col.names = c("Method", "Estimate (kg)", "SE", "95% CI"))
+```
+@fig-resid illustrates the residual diagnostics for the regression model.  The right panel shows the residuals by smoking status.
+
+```{r}
+#| label: fig-resid
+#| fig-cap: "Residual diagnostics for the adjusted regression model."
+#| fig-subcap:
+#|   - "Residuals versus fitted values"
+#|   - "Residuals by smoking status"
+#| layout-ncol: 2
+#| fig-width: 5
+#| fig-height: 4.5
+#| echo: false
+
+par(col.main = uct_cols["navy"], col.lab = uct_cols["navy"],
+    col.axis = uct_cols["navy"], fg = uct_cols["navy"])
+
+plot(fitted(model), resid(model),
+     pch = 19, cex = 0.6, col = adjustcolor(uct_cols["blue"], alpha.f = 0.5),
+     xlab = "Fitted weight change (kg)", ylab = "Residual (kg)", main = "")
+abline(h = 0, col = uct_cols["magenta"], lty = 2, lwd = 2)
+
+par(col.main = uct_cols["navy"], col.lab = uct_cols["navy"],
+    col.axis = uct_cols["navy"], fg = uct_cols["navy"])
+
+boxplot(resid(model) ~ dat$qsmk,
+        names = c("Non-quitters", "Quitters"),
+        col = uct_cols[c("blue", "teal")], border = uct_cols["navy"],
+        xlab = "", ylab = "Residual (kg)", main = "")
+
+```
+
+The residuals were scattered evenly around zero with no clear pattern across the fitted values, and their spread was similar among both quitters and non-quitters. The plots show no clear violation of the constant variance assumption.
+
+__Monte Carlo error:__ Monte Carlo error is the random variation in a bootstrap result caused by using a specific number of resamples ($B$). To assess Monte Carlo error, the case bootstrap was repeated 20 times for each of $B$ = 200, 1 000, 5 000 and 10 000 replicates. @tbl-mc-summary shows that the range of the standard error and of the 95% confidence interval limits across runs became smaller with more replicates. The variability between runs decreased as $B$ increased, further seen in @fig-mc-se, [Appendix C](#sec-appendix-mc). 
+
+```{r}
+#| label: tbl-mc-summary
+#| tbl-cap: 'Monte Carlo variability of the case bootstrap by number of replicates`#linebreak()`{=typst}`#text(size: 0.85em, style: "italic")[Range (max − min, kg) across 20 independent runs at each value of $B$]`{=typst}'
+#| echo: false
+
+mc_summary_tab <- data.frame(
+  B        = format(mc_summary$B, big.mark = "\u00a0"),
+  SE       = sprintf("%.4f", mc_summary$SE_Range),
+  CI       = sprintf("%.3f, %.3f", mc_summary$Lower_CI_Range,
+                     mc_summary$Upper_CI_Range)
+)
+
+knitr::kable(mc_summary_tab, align = "rrr", row.names = FALSE,
+             col.names = c("$B$", "SE", "95% CI"))
+```
+The variability between runs at $B$ = 5 000 was small, confirming that 5 000 replicates were sufficient for stable standard errors and confidence intervals in this analysis.
+
+Next, the results are interpreted and discussed.
+
+{{< pagebreak >}}
+
+# Discussion
+<!-- > Interpret your results in plain language, discuss whether the assumptions of the method are reasonable here, and describe the main limitations. -->
+
+
+The median weight gain among quitters was 1.8 kg (95% BCa CI 0.9 to 2.7 kg) higher than among participants who continued smoking. After adjusting for sex, race, age, education, smoking intensity, years of smoking, exercise, physical activity and baseline weight, quitters gained on average 3.4 kg more (95% CI 2.5 to 4.3 kg, case bootstrap).
+
+**Confidence intervals for the median difference.** Both the percentile and BCa methods gave similar confidence intervals for the difference in medians, which were slightly wider than the normal approximation. The BCa method is preferred because it corrects for bias and skewness in the bootstrap distribution.
+
+**The adjusted effect standard errors.** The case bootstrap resamples whole participants, and only assumes that participants are independent. The residual bootstrap and the conventional linear regression formula also assume that every participant has the same error variance. The case bootstrap is preferred because it relies on the fewest assumptions. It gave a slightly larger standard error, suggesting the equal-variance assumption may not fully hold, although all three methods give the same conclusion.
+
+**Choice of $B$.** The variability of the case bootstrap standard error and confidence limits across repeated runs decreased as $B$ increased (@tbl-mc-summary). Confidence limits depend on the tails of the bootstrap distribution and need more replicates than the standard error. $B$ = 5 000 is sufficient for reporting intervals.
+
+**Assumptions and limitations.** The bootstrap assumes that participants are independent and representative of the target population, and that the sample is large enough for the bootstrap distribution to approximate the sampling distribution. These assumptions are reasonable for NHEFS. The bootstrap can fail in small samples, for non-smooth statistics such as a maximum, with clustered data unless whole clusters are resampled, and when the resampling scheme does not match the data.
+
+The bootstrap only measures sampling variability. It cannot correct for confounding or for bias from missing outcomes. Weight change was missing for `r n_missing` participants, who were older and more likely to have died during follow-up (`r n_missing_died` of `r n_missing` died; [Appendix B](#sec-appendix-missing)). Excluding them biases the analysis towards younger, healthier participants, so the results mainly describe healthier survivors. These estimates are adjusted associations, not causal effects.
+
+
+
+
+{{< pagebreak >}}
+
+# Appendix A: Baseline characteristics {#sec-appendix-baseline .unnumbered}
+
+```{r}
+#| label: tbl-baseline
+#| tbl-cap: 'Baseline (1971) characteristics by smoking status`#linebreak()`{=typst}`#text(size: 0.85em, style: "italic")[Participants with observed weight change; mean (SD) or n (%)]`{=typst}'
+#| echo: false
+
+bl_quit <- dat$qsmk == 1
+ind <- "   "
+
+bl_mean <- function(x) {
+  c(sprintf("%.1f (%.1f)", mean(x[!bl_quit]), sd(x[!bl_quit])),
+    sprintf("%.1f (%.1f)", mean(x[bl_quit]), sd(x[bl_quit])))
+}
+bl_pct <- function(cond) {
+  c(sprintf("%d (%.1f)", sum(cond[!bl_quit]), 100 * mean(cond[!bl_quit])),
+    sprintf("%d (%.1f)", sum(cond[bl_quit]), 100 * mean(cond[bl_quit])))
+}
+bl_cat <- function(x, labels) {
+  x <- as.character(x)
+  t(sapply(names(labels), function(lv) bl_pct(x == lv)))
+}
+
+edu_lab <- c("1" = "8th grade or less", "2" = "Some high school",
+             "3" = "High school", "4" = "Some college", "5" = "College or more")
+exe_lab <- c("0" = "Much", "1" = "Moderate", "2" = "Little or none")
+act_lab <- c("0" = "Very active", "1" = "Moderately active", "2" = "Inactive")
+
+bl_rows <- rbind(
+  c("Age (years)",              bl_mean(dat$age)),
+  c("Female",                   bl_pct(as.character(dat$sex) == "1")),
+  c("Black or other race",      bl_pct(as.character(dat$race) == "1")),
+  c("Weight (kg)",              bl_mean(dat$wt71)),
+  c("Cigarettes per day",       bl_mean(dat$smokeintensity)),
+  c("Years smoked",             bl_mean(dat$smokeyrs)),
+  c("Education",                "", ""),
+  cbind(paste0(ind, edu_lab),   bl_cat(dat$education, edu_lab)),
+  c("Recreational exercise",    "", ""),
+  cbind(paste0(ind, exe_lab),   bl_cat(dat$exercise, exe_lab)),
+  c("Daily physical activity",  "", ""),
+  cbind(paste0(ind, act_lab),   bl_cat(dat$active, act_lab))
+)
+
+knitr::kable(as.data.frame(bl_rows), align = "lrr", row.names = FALSE,
+             col.names = c("Characteristic",
+                           sprintf("Non-quitters (n = %d)", n_cont),
+                           sprintf("Quitters (n = %d)", n_quit)))
+```
+
+{{< pagebreak >}}
+
+# Appendix B: Missing data {#sec-appendix-missing .unnumbered}
+
+Weight change (`wt82_71`) was missing for `r n_missing` of `r nrow(nhefs)` participants (`r sprintf("%.1f", pct_missing)`%). @tbl-missingness compares their baseline characteristics with those of participants who had an observed outcome. `r n_missing_died` of the `r n_missing` participants with missing weight change (`r sprintf("%.1f", miss_death$pct_Missing)`%) died during follow-up, compared with `r sprintf("%.1f", miss_death$pct_Observed)`% of those with an observed outcome. Income is recorded as an ordinal category code rather than an amount, so it is summarised as a median and interquartile range and compared with a Wilcoxon rank-sum test.
+
+```{r}
+#| label: tbl-missingness
+#| tbl-cap: 'Baseline characteristics of participants with missing and observed weight change`#linebreak()`{=typst}`#text(size: 0.85em, style: "italic")[Mean, except n (%) for died and median [IQR] for income category (ordinal code). SMD = standardised mean difference. p-values from Welch t-tests, except Fisher''s exact test (died) and Wilcoxon rank-sum test (income)]`{=typst}'
+#| echo: false
+
+miss_labels <- c(
+  age            = "Age (years)",
+  wt71           = "Weight in 1971 (kg)",
+  ht             = "Height (cm)",
+  smokeintensity = "Cigarettes per day",
+  smokeyrs       = "Years smoked",
+  cholesterol    = "Cholesterol (mg/dL)",
+  sbp            = "Systolic BP (mmHg)",
+  dbp            = "Diastolic BP (mmHg)"
+)
+
+miss_cont_tab <- data.frame(
+  Variable = miss_labels[miss_cont$Variable],
+  Missing  = sprintf("%.1f", miss_cont$Mean_Missing),
+  Observed = sprintf("%.1f", miss_cont$Mean_Observed),
+  SMD      = sprintf("%.2f", miss_cont$SMD),
+  p        = ifelse(miss_cont$p < 0.001, "<0.001", sprintf("%.3f", miss_cont$p))
+)
+
+fmt_p <- function(p) ifelse(p < 0.001, "<0.001", sprintf("%.3f", p))
+
+miss_cont_tab <- rbind(
+  miss_cont_tab,
+  data.frame(
+    Variable = "Died during follow-up, n (%)",
+    Missing  = sprintf("%d (%.1f)", miss_death$n_Missing, miss_death$pct_Missing),
+    Observed = sprintf("%d (%.1f)", miss_death$n_Observed, miss_death$pct_Observed),
+    SMD      = sprintf("%.2f", miss_death$SMD),
+    p        = fmt_p(miss_death$p)
+  ),
+  data.frame(
+    Variable = "Income category, median [IQR]",
+    Missing  = sprintf("%g [%g, %g]", miss_income$Median_Missing,
+                       miss_income$Q1_Missing, miss_income$Q3_Missing),
+    Observed = sprintf("%g [%g, %g]", miss_income$Median_Observed,
+                       miss_income$Q1_Observed, miss_income$Q3_Observed),
+    SMD      = "\u2014",
+    p        = fmt_p(miss_income$p)
+  )
+)
+
+knitr::kable(
+  miss_cont_tab, align = "lrrrr", row.names = FALSE,
+  col.names = c("Variable",
+                sprintf("Missing (n = %d)", n_missing),
+                sprintf("Observed (n = %d)", nrow(nhefs) - n_missing),
+                "SMD", "p")
+)
+```
+
+{{< pagebreak >}}
+
+
+
+# Appendix C: Monte Carlo error {#sec-appendix-mc .unnumbered}
+
+
+```{r}
+#| label: fig-mc-se
+#| fig-cap: 'Monte Carlo stability of the case-bootstrap standard error`#linebreak()`{=typst}`#text(size: 0.85em, style: "italic")[Each line is one of 20 independent runs of the case bootstrap at each value of B]`{=typst}'
+#| fig-width: 7
+#| fig-height: 4.5
+#| echo: false
+
+par(col.main = unname(uct_cols["navy"]), col.lab = unname(uct_cols["navy"]),
+    col.axis = unname(uct_cols["navy"]), fg = unname(uct_cols["navy"]))
+
+plot(NA, xlim = range(B_values), ylim = range(mc_results$SE), log = "x",
+     xaxt = "n", xlab = "Bootstrap replicates (B)", ylab = "Bootstrap SE (kg)",
+     main = "")
+axis(1, at = B_values, labels = format(B_values, big.mark = " "))
+
+mc_line_cols <- rep_len(uct_cols, n_runs)
+for (run in seq_len(n_runs)) {
+  d <- subset(mc_results, Run == run)
+  lines(d$B, d$SE, type = "b", pch = 19, cex = 0.7,
+        col = adjustcolor(mc_line_cols[run], alpha.f = 0.7))
+}
+```
+
+{{< pagebreak >}}
+
+# Appendix D: Code {#sec-appendix-code .unnumbered}
+
+
+```{r}
+#| results: asis
+for (f in c("src/analysis.R", "src/missing_data.R")) {
+  cat("**", f, "**\n\n```r\n", sep = "")
+  cat(readLines(f), sep = "\n")
+  cat("\n```\n\n")
+}
+```
+
