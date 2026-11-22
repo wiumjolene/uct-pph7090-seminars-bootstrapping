@@ -128,7 +128,7 @@ tab
 
 __Regression to determine the adjusted effect of quitting:__
 
-Conventional OLS assumes that the errors are independent, normally distributed and have constant variance.
+Adjusting the data for other covariates shows the estimated effect of quitting smoking on weight change. @tbl-regression-boot compares a standard normal linear regression of `wt82_71` on `qsmk` and other covariates with fixed and random predictors. The Conventional OLS assumes that the errors are independent, normally distributed and have constant variance.
 
 The case bootstrap resamples whole participants with replacement, treating the predictors as random. The model was refitted to 5000 resamples, and the spread of the `qsmk` coefficients was used to estimate the standard error. Because it does not assume constant variance, it remains valid under heteroscedasticity. In this analysis it produced a slightly wider confidence interval than the other two methods.
 
@@ -150,7 +150,7 @@ comparison_tab <- data.frame(
 knitr::kable(comparison_tab, align = "lccc", row.names = FALSE,
              col.names = c("Method", "Estimate (kg)", "SE", "95% CI"))
 ```
-
+@fig-resid illustrate the residual diagnostics for the regression model. The left panel shows the residuals versus fitted values, which should be randomly scattered around zero if the model is appropriate. The right panel shows the residuals by smoking status, which should have similar distributions if the assumption of homoscedasticity holds.
 
 ```{r}
 #| label: fig-resid
@@ -178,6 +178,32 @@ boxplot(resid(model) ~ dat$qsmk,
         names = c("Non-quitters", "Quitters"),
         col = uct_cols[c("blue", "teal")], border = uct_cols["navy"],
         xlab = "", ylab = "Residual (kg)", main = "")
+
+```
+
+__Monte Carlo error:__
+
+```{r}
+#| label: fig-mc-se
+#| fig-cap: 'Monte Carlo stability of the case-bootstrap standard error`#linebreak()`{=typst}`#text(size: 0.85em, style: "italic")[Each line is one of 20 independent runs of the case bootstrap at each value of B]`{=typst}'
+#| fig-width: 7
+#| fig-height: 4.5
+#| echo: false
+
+par(col.main = unname(uct_cols["navy"]), col.lab = unname(uct_cols["navy"]),
+    col.axis = unname(uct_cols["navy"]), fg = unname(uct_cols["navy"]))
+
+plot(NA, xlim = range(B_values), ylim = range(mc_results$SE), log = "x",
+     xaxt = "n", xlab = "Bootstrap replicates (B)", ylab = "Bootstrap SE (kg)",
+     main = "")
+axis(1, at = B_values, labels = format(B_values, big.mark = " "))
+
+mc_line_cols <- rep_len(uct_cols, n_runs)
+for (run in seq_len(n_runs)) {
+  d <- subset(mc_results, Run == run)
+  lines(d$B, d$SE, type = "b", pch = 19, cex = 0.7,
+        col = adjustcolor(mc_line_cols[run], alpha.f = 0.7))
+}
 ```
 
 # Discussion
