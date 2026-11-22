@@ -52,7 +52,7 @@ source("src/analysis.R")
 {{< pagebreak >}}
 
 # Introduction
-> _Estimate the difference in weight change between quitters and non-quitters, and its uncertainty, in situations where the standard formulas either don’t exist or might not be appropriate._
+<!-- > _Estimate the difference in weight change between quitters and non-quitters, and its uncertainty, in situations where the standard formulas either don’t exist or might not be appropriate._ -->
 
 This report uses bootstrapping to estimate the uncertainty associated with differences in median weight change between participants who quit smoking and those who continued smoking. The standard error of a median is difficult to calculate and bootstrapping provides a robust alternative.
 
@@ -61,7 +61,7 @@ This report uses bootstrapping to estimate the uncertainty associated with diffe
 The methods section describes how bootstrapping is used for this analysis. The results section presents the findings, and the discussion section interprets the results and discusses limitations.
 
 # Methods
-> _What you did and why, including the key decisions you made and the assumptions of the method. Someone else should be able to repeat your analysis from this section._
+<!-- > _What you did and why, including the key decisions you made and the assumptions of the method. Someone else should be able to repeat your analysis from this section._ -->
 
 
 The analysis uses data from the the first US National Health and Nutrition Examination Survey Epidemiologic Follow-up Study (NHEFS). This study followed 1629 participants between 1971 and 1982 and observed weight change in smokers. The exposure used in this analysis is smoking status (quitters versus non-quitters). 
@@ -78,11 +78,11 @@ The analysis method can be divided into four phases: data preparation and descri
 
 Next, the results of the analysis are presented.
 
-> Note: NB - Remember to consider sample in groups
+<!-- > Note: NB - Remember to consider sample in groups -->
 
 
 # Results
-> A small number of well-chosen tables and figures, with estimates and measures of uncertainty.
+<!-- > A small number of well-chosen tables and figures, with estimates and measures of uncertainty. -->
 
 
 In total, data for 1929 participants were recorded. Missing values in the weight change (`wt82_71`) variable were excluded from the analysis (`r pct_missing`%), leaving `r n_total` participants for analysis. 27 of `r n_missing` missing values were from participants who died, biasing the analysis to healthier and younger individuals.
@@ -201,10 +201,8 @@ knitr::kable(mc_summary_tab, align = "rrr", row.names = FALSE,
 ```
 
 # Discussion
-> Interpret your results in plain language, discuss whether the assumptions of the method are reasonable here, and describe the main limitations.
+<!-- > Interpret your results in plain language, discuss whether the assumptions of the method are reasonable here, and describe the main limitations. -->
 
-
-# Discussion
 
 The median weight gain among quitters was 1.8 kg (95% BCa CI 0.9 to 2.7 kg) higher than among participants who continued smoking. After adjusting for sex, race, age, education, smoking intensity, years of smoking, exercise, physical activity and baseline weight, quitters gained on average 3.4 kg more (95% CI 2.5 to 4.3 kg, case bootstrap).
 
