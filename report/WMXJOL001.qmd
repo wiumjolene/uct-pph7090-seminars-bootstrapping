@@ -130,9 +130,9 @@ __Regression to determine the adjusted effect of quitting:__
 
 Conventional OLS assumes the residuals has homoscedasticity, are independent and normally distributed. 
 
-Case bootstrap resamples whole participants with replacement, meaning each person's outcome and covariates stay together. It refits the model 5000 times and use the spread of the coefficients to determine the standard error, resulting in a slighlty wider confidence interval. An advantage is that it can be employed under heteroscedasticity and it does not assume constant variance. 
+Case bootstrap resamples whole participants with replacement, treating the predictors as random. It refits the model 5000 times and use the spread of the coefficients to determine the standard error, resulting in a slighlty wider confidence interval. An advantage is that it can be employed under heteroscedasticity and it does not assume constant variance. 
 
-Residual bootstrap (your loop with y_star <- fitted_y + sampled_resid) keeps every participant's covariates fixed. It takes the fitted values from your model and adds residuals drawn at random from the whole pool. It then refits and records the qsmk coefficient each time. It treats the predictors as fixed, as in a designed experiment, and assumes the model is correctly specified and the errors are exchangeable, meaning they all come from one distribution with the same variance. Shuffling residuals across people makes that assumption explicit. If quitters have more spread-out residuals than non-quitters, it mixes them together and hides the difference. That's why its results usually land close to the conventional OLS SE. It relaxes only the normality assumption, not the constant-variance one.
+Residual bootstrap treats the covariates as fixed, keeping the predictors as the observed values. It uses the fitted values from the model and resamples from the residuals. The confidence interval is slightly narrower than the case bootstrap, but it assumes that the model is correctly specified and that the residuals are independent and identically distributed.
 
 
 ```{r}
