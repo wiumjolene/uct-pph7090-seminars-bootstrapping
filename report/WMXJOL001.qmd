@@ -64,10 +64,9 @@ source("src/analysis.R")
 # Introduction
 <!-- > _Estimate the difference in weight change between quitters and non-quitters, and its uncertainty, in situations where the standard formulas either don’t exist or might not be appropriate._ -->
 
-This report uses bootstrapping to estimate the uncertainty in the difference in weight change between participants who quit smoking and those who continued smoking. There is no simple formula for the standard error of a difference in medians. Bootstrapping avoids the need for a formula and provides an alternative way to calculate standard errors and confidence intervals. Bootstrapping is also used to check the standard errors from a regression model adjusted for baseline characteristics, because the conventional formula assumes that the error variance is equal for all participants.
+This report uses bootstrapping to estimate the uncertainty in the difference in weight change between participants who quit smoking and those who continued smoking. Bootstrapping avoids the need for a complex formula and provides an alternative way to calculate standard errors and confidence intervals. Bootstrapping is also used to check the standard errors from a regression model adjusted for baseline characteristics, because the conventional formula assumes that the error variance is equal for all participants.
 
 The methods section describes how bootstrapping is used for this analysis. The results section presents the findings, and the discussion section interprets the results and discusses limitations.
-
 
 
 # Methods
