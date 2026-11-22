@@ -102,7 +102,7 @@ The observed difference in median weight change between quitters and non-quitter
 
 ```{r}
 #| label: tbl-median-boot
-#| tbl-cap: 'Bootstrap estimates for the difference in median weight change`#linebreak()`{=typst}`#text(size: 0.85em, style: "italic")[R = 5000, stratified by smoking status]`{=typst}'
+#| tbl-cap: 'Bootstrap estimates for the difference in median weight change'
 #| echo: false
 
 library(knitr)
@@ -136,7 +136,7 @@ The bootstrap distribution of the median difference is shown in @fig-median-boot
 
 ```{r}
 #| label: fig-median-boot
-#| fig-cap: 'Bootstrap distribution of the difference in median weight change`#linebreak()`{=typst}`#text(size: 0.85em, style: "italic")[R = 5000. Solid line: observed estimate; dashed line: zero]`{=typst}'
+#| fig-cap: 'Bootstrap distribution of the difference in median weight change'
 #| fig-width: 6
 #| fig-height: 3.5
 #| out-width: "75%"
@@ -155,11 +155,11 @@ abline(v = 0, lty = 2, col = uct_cols["steel"], lwd = 2)
 
 __Regression to determine the adjusted effect of quitting:__
 
-A linear regression of weight change on quitting, adjusted for sex, race, age, education, smoking intensity, years of smoking, exercise, physical activity and baseline weight, estimated that quitters gained on average `r sprintf("%.2f", coef(model)["qsmk"])` kg more than non quitters. @tbl-regression-boot compares three ways of estimating the uncertainty of this coefficient: the conventional linear regression formula, the case bootstrap (predictors treated as random) and the residual bootstrap (predictors treated as fixed).
+A linear regression of weight change on quitting, adjusted for sex, race, age, education, smoking intensity, years of smoking, exercise, physical activity and baseline weight, estimated that quitters gained on average `r sprintf("%.2f", coef(model)["qsmk"])` kg more than non-quitters. @tbl-regression-boot compares three ways of estimating the uncertainty of this coefficient: the conventional OLS formula, the case bootstrap and the residual bootstrap. The conventional formula assumes that the errors are independent, normally distributed and have constant variance.
 
 The case bootstrap resamples whole participants with replacement, treating the predictors as random. The model was refitted to 5000 resamples, and the spread of the `qsmk` coefficients was used to estimate the standard error. Because it does not assume constant variance, it remains valid under heteroscedasticity. In this analysis it produced a slightly wider confidence interval than the other two methods.
 
-The residual bootstrap treats the predictors as fixed at their observed values. Residuals from the fitted model are resampled with replacement, added back to the fitted values, and the model is refitted. It does not assume normality, but it does assume that the model is correctly specified and that the errors are independent and identically distributed, which implies constant variance. In this analysis its confidence interval was slightly narrower than that of the case bootstrap.
+The residual bootstrap treats the predictors as fixed at their observed values. Residuals from the fitted model are resampled with replacement, added back to the fitted values, and the model is refitted, again 5000 times. It does not assume normality, but it does assume that the model is correctly specified and that the errors are independent and identically distributed, which implies constant variance. In this analysis its confidence interval was slightly narrower than that of the case bootstrap.
 
 
 ```{r}
