@@ -34,6 +34,101 @@ cat("Complete cases:", n_total, "\n")
 cat("Quitters:", n_quit, "| Smokers:", n_cont, "\n")
 cat("Difference in medians (kg):", round(med_diff, 3), "\n")
 
+# ----- Missing data in the outcome (wt82_71) ----------------------------------
+# Compare participants with and without a 1982 weight on baseline
+# characteristics, to judge whether complete-case analysis is reasonable.
+
+nhefs$wt_missing <- as.integer(is.na(nhefs$wt82_71))
+n_missing <- sum(nhefs$wt_missing)
+pct_missing <- 100 * mean(nhefs$wt_missing)
+cat("Missing wt82_71:", n_missing, "of", nrow(nhefs),
+    sprintf("(%.1f%%)", pct_missing), "\n")
+
+# Continuous baseline variables: means, standardised mean difference, Welch t-test
+miss_cont_vars <- c("age", "wt71", "ht", "smokeintensity", "smokeyrs",
+                    "income", "cholesterol", "sbp", "dbp")
+
+miss_cont <- do.call(rbind, lapply(miss_cont_vars, function(v) {
+  x_miss <- nhefs[[v]][nhefs$wt_missing == 1]
+  x_obs  <- nhefs[[v]][nhefs$wt_missing == 0]
+  smd <- (mean(x_miss, na.rm = TRUE) - mean(x_obs, na.rm = TRUE)) /
+    sqrt((var(x_miss, na.rm = TRUE) + var(x_obs, na.rm = TRUE)) / 2)
+  data.frame(Variable = v,
+             Mean_Missing = mean(x_miss, na.rm = TRUE),
+             Mean_Observed = mean(x_obs, na.rm = TRUE),
+             SMD = smd,
+             p = t.test(x_miss, x_obs)$p.value)
+}))
+print(miss_cont, digits = 3, row.names = FALSE)
+
+# Categorical baseline variables: % missing in each level, chi-squared test
+miss_cat_vars <- c("qsmk", "sex", "race", "education", "exercise",
+                   "active", "death")
+
+miss_cat <- do.call(rbind, lapply(miss_cat_vars, function(v) {
+  tab <- table(nhefs[[v]], nhefs$wt_missing)
+  data.frame(Variable = v,
+             Level = rownames(tab),
+             N = as.vector(rowSums(tab)),
+             N_Missing = as.vector(tab[, "1"]),
+             Pct_Missing = as.vector(100 * tab[, "1"] / rowSums(tab)),
+             p = suppressWarnings(chisq.test(tab)$p.value))
+}))
+print(miss_cat, digits = 3, row.names = FALSE)
+
+# Fisher's exact test for the two most important binary comparisons
+fisher_qsmk  <- fisher.test(table(nhefs$qsmk,  nhefs$wt_missing))$p.value
+fisher_death <- fisher.test(table(nhefs$death, nhefs$wt_missing))$p.value
+cat("Fisher p (quitting):", signif(fisher_qsmk, 3),
+    "| Fisher p (death):", signif(fisher_death, 3), "\n")
+
+# Share of the missing participants who died during follow-up
+n_missing_died <- sum(nhefs$wt_missing == 1 & nhefs$death == 1)
+cat("Missing participants who died:", n_missing_died, "of", n_missing, "\n")
+
+# Joint model: which outcome-model covariates predict missingness?
+miss_dat <- nhefs
+miss_dat[c("sex", "race", "education", "exercise", "active")] <-
+  lapply(miss_dat[c("sex", "race", "education", "exercise", "active")], factor)
+
+miss_model <- glm(wt_missing ~ qsmk + sex + race + age + education +
+                    smokeintensity + smokeyrs + exercise + active + wt71,
+                  family = binomial, data = miss_dat)
+print(summary(miss_model))
+
+miss_or <- data.frame(
+  Term = names(coef(miss_model)),
+  OR = exp(coef(miss_model)),
+  CI_Lower = exp(confint.default(miss_model)[, 1]),
+  CI_Upper = exp(confint.default(miss_model)[, 2]),
+  p = coef(summary(miss_model))[, "Pr(>|z|)"],
+  row.names = NULL
+)[-1, ]
+print(miss_or, digits = 3, row.names = FALSE)
+
+# Likelihood-ratio test against the intercept-only model
+miss_lr_p <- with(miss_model,
+                  pchisq(null.deviance - deviance, df.null - df.residual,
+                         lower.tail = FALSE))
+cat("LR test, covariates jointly predict missingness: p =",
+    signif(miss_lr_p, 3), "\n")
+
+# Plot: % missing by key groups
+miss_plot <- c(
+  "Continued smoking" = mean(nhefs$wt_missing[nhefs$qsmk == 0]),
+  "Quit smoking"      = mean(nhefs$wt_missing[nhefs$qsmk == 1]),
+  "Survived"          = mean(nhefs$wt_missing[nhefs$death == 0]),
+  "Died"              = mean(nhefs$wt_missing[nhefs$death == 1]),
+  "Age < 50"          = mean(nhefs$wt_missing[nhefs$age < 50]),
+  "Age 50+"           = mean(nhefs$wt_missing[nhefs$age >= 50])
+) * 100
+
+barplot(miss_plot, horiz = TRUE, las = 1, xlim = c(0, max(miss_plot) * 1.15),
+        col = rep(uct_cols[c("blue", "teal", "magenta")], each = 2),
+        border = NA, xlab = "% missing wt82_71",
+        main = "Missing 1982 weight by participant group")
+abline(v = pct_missing, lty = 2, col = uct_cols["steel"], lwd = 2)
+
 # ----- 1. Difference in medians -----------------------------------------------
 median_diff_fn <- function(data, indices) {
   d <- data[indices, ]

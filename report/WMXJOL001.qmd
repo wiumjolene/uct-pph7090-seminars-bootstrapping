@@ -64,11 +64,11 @@ The methods section describes how bootstrapping is used for this analysis. The r
 > _What you did and why, including the key decisions you made and the assumptions of the method. Someone else should be able to repeat your analysis from this section._
 
 
-The analysis uses data from the National Health and Nutrition Examination Survey Epidemiologic Follow-up Study (NHEFS). This study followed participants between 1971 and 1982 and observed weight change. The exposure used in this analysis is smoking status (quitters versus non-quitters). 
+The analysis uses data from the the first US National Health and Nutrition Examination Survey Epidemiologic Follow-up Study (NHEFS). This study followed 1629 participants between 1971 and 1982 and observed weight change in smokers. The exposure used in this analysis is smoking status (quitters versus non-quitters). 
 
-The analysis method can be divided into four phases: data preparation, descriptive statistics, bootstrapping the difference in median, regression analysis to estimate the adjusted effect of smoking cessation and last, monte carlo method to determine error.
+The analysis method can be divided into four phases: data preparation and descriptive statistics, bootstrapping the difference in median, regression analysis to estimate the adjusted effect of smoking cessation and last and last, monte carlo method to determine error.
 
-**Data preparation:** Cases with missing values in the weight change (`wt82_71`) variable were excluded from the analysis. In total 62 entries were removed, leaving `r n_total` participants for analysis. 
+**Data preparation and descriptive statistics:** Cases with missing values in the weight change (`wt82_71`) variable were excluded from the analysis. In total 62 entries were removed, leaving `r n_total` participants for analysis. 
 
 **Bootstrapping the difference in medians:** 5000 bootstrap samples were drawn with replacement from the original dataset, using the stratified bootstrap method. For each sample, the median weight change was calculated for both quitters and non-quitters, and the difference in medians was computed. The distribution of these differences across all bootstrap samples was used to estimate the standard error and construct confidence intervals.
 
@@ -76,7 +76,7 @@ The analysis method can be divided into four phases: data preparation, descripti
 
 **Monte Carlo error:** Last, a Monte Carlo simulation was run to determine the variability in the bootstrap estimates due to the finite number of bootstrap samples. This was done by repeating the bootstrapping procedure 20 times and examining the variability in the resulting estimates.
 
-
+Next, the results of the analysis are presented.
 
 > Note: NB - Remember to consider sample in groups
 
@@ -85,30 +85,15 @@ The analysis method can be divided into four phases: data preparation, descripti
 > A small number of well-chosen tables and figures, with estimates and measures of uncertainty.
 
 
-The number of participants who quit smoking was `r n_quit`, while `r n_cont` participants continued smoking.
+In total, data for 1929 participants were recorded. Missing values in the weight change (`wt82_71`) variable were excluded from the analysis (`r pct_missing`%), leaving `r n_total` participants for analysis. 27 of `r n_missing` missing values were from participants who died, biasing the analysis to healthier and younger individuals.
 
+Of the `r n_total` participants, `r n_quit` (`r round(100 * n_quit / n_total, 1)`%) quit smoking while `r n_cont` participants continued smoking until 1982. The median weight change was `r round(med_diff, 2)` kg higher among those who quit smoking (`r round(med_quit, 2)` kg) than those who continued smoking (`r round(med_cont, 2)` kg).
 
-Of the `r n_total` participants, `r n_quit` (`r round(100 * n_quit / n_total, 1)`%) quit smoking. The median weight change was `r round(med_diff, 2)` kg higher among those who quit smoking (@tbl-groups).
-
-```{r}
-#| label: tbl-groups
-#| tbl-cap: "Median weight change (kg) by smoking status"
-
-tab <- data.frame(
-  Group = c("Quit smoking", "Continued smoking", "Total"),
-  n = c(n_quit, n_cont, n_total),
-  `Median weight change (kg)` = c(round(med_quit, 2), round(med_cont, 2), NA),
-  check.names = FALSE
-)
-
-knitr::kable(tab, align = "lrr", na = "")
-```
-
-
+Bootsrapping the difference in median weight change between quitters and non-quitters produced a mean estimate of `r round(median_boot$t0, 2)` kg with a standard error of `r round(median_se, 2)` kg. The 95% confidence interval for the difference in medians was estimated to be `r sprintf("(%.2f, %.2f)", median_ci$percent[4], median_ci$percent[5])` kg using the percentile method and `r sprintf("(%.2f, %.2f)", median_ci$bca[4], median_ci$bca[5])` kg using the bias-corrected and accelerated (BCa) method (@tbl-median-boot).
 
 ```{r}
 #| label: tbl-median-boot
-#| tbl-cap: "Bootstrap estimates for the difference in median weight change (quitters − non-quitters), R = 5000, stratified by smoking status"
+#| tbl-cap: 'Bootstrap estimates for the difference in median weight change`#linebreak()`{=typst}`#text(size: 0.85em, style: "italic")[R = 5000, stratified by smoking status]`{=typst}'
 #| echo: false
 
 library(knitr)
@@ -155,6 +140,8 @@ hist(median_boot$t[, 1], breaks = 40, col = uct_cols["blue"],
 abline(v = median_boot$t0, col = uct_cols["magenta"], lwd = 2)
 abline(v = 0, lty = 2, col = uct_cols["steel"])
 ```
+
+
 
 ```{r}
 #| label: fig-resid
