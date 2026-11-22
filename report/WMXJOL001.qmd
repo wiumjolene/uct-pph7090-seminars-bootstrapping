@@ -155,7 +155,7 @@ abline(v = 0, lty = 2, col = uct_cols["steel"], lwd = 2)
 
 __Regression to determine the adjusted effect of quitting:__
 
-Adjusting the data for other covariates shows the estimated effect of quitting smoking on weight change. @tbl-regression-boot compares a standard normal linear regression of `wt82_71` on `qsmk` and other covariates with fixed and random predictors. The Conventional OLS assumes that the errors are independent, normally distributed and have constant variance.
+Adjusting the data for other covariates shows the estimated effect of quitting smoking on weight change. @tbl-regression-boot compares a standard normal linear regression of `wt82_71` on `qsmk` and other covariates (sex, race, age, education, smoking intensity, years of smoking, exercise, physical activity and baseline weight) with fixed and random predictors. The Conventional OLS assumes that the errors are independent, normally distributed and have constant variance.
 
 The case bootstrap resamples whole participants with replacement, treating the predictors as random. The model was refitted to 5000 resamples, and the spread of the `qsmk` coefficients was used to estimate the standard error. Because it does not assume constant variance, it remains valid under heteroscedasticity. In this analysis it produced a slightly wider confidence interval than the other two methods.
 
