@@ -54,6 +54,33 @@ source("src/missing_data.R")
 
 # Plagiarism Declaration {.unnumbered}
 
+I acknowledge that plagiarism is a serious form of academic misconduct and dishonesty.
+
+I have read and understood the document, ‘Avoiding Plagiarism: A guide for students’ from
+the University of Cape Town. I acknowledge that I understand that the utilisation of open
+AI tools (such as ChatGPT) without proper acknowledgement and citation is also a form
+of academic misconduct and is not allowed. 
+
+I acknowledge and accept the institutional
+penalties that are applied if I should plagiarise in any submitted work. 
+
+I have been warned
+that for coursework assessment: first-time and minor misconduct breaches will result in a
+mark deduction and warning; and any repeat or major misconduct breaches will result in a
+failing grade and possible escalation to the Faculty Misconduct Committee (at the course
+convenor’s discretion).
+
+
+# AI Tools Declaration  {.unnumbered}
+I declare that in the preparation of this assignment, I used Claude (model Opus 5.5) as a support tool. The tool was used for assistance with:
+
+1. Clarifying statistical concepts (e.g., interpretation, model fit metrics),
+2. Refining R code snippets.
+3. Formatting tables and figures in Quartro.
+
+All statistical analyses, interpretation of results, and final critical reflections were conducted by me.
+The AI tool did not generate findings, nor did it substitute for my own analysis, understanding, or judgment. I have reviewed and edited the outputs to ensure accuracy, appropriateness, and alignment with the course requirements.
+
 
 ```{=typst}
 #pagebreak()
@@ -74,17 +101,17 @@ The methods section describes how bootstrapping is used for this analysis. The r
 <!-- > _What you did and why, including the key decisions you made and the assumptions of the method. Someone else should be able to repeat your analysis from this section._ -->
 
 
-The analysis uses data from the the first US National Health and Nutrition Examination Survey Epidemiologic Follow-up Study (NHEFS). This study followed 1629 participants between 1971 and 1982 and observed weight change in smokers. The exposure used in this analysis is smoking status (quitters versus non-quitters). 
+The analysis uses data from the first US National Health and Nutrition Examination Survey Epidemiologic Follow-up Study (NHEFS). This study followed 1629 participants between 1971 and 1982 and observed weight change in smokers. The exposure used in this analysis is smoking status (quitters versus non-quitters). 
 
-The analysis can be divided into four phases: data preparation and descriptive statistics, bootstrapping the difference in median, regression analysis to estimate the adjusted effect of smoking cessation and last and last, monte carlo method to determine error.
+The analysis can be divided into four phases: data preparation and descriptive statistics, bootstrapping the difference in medians, regression analysis to estimate the adjusted effect of smoking cessation and, last, the Monte Carlo method to determine error.
 
 
 
-**Data preparation and descriptive statistics:** In total, data for `r nrow(nhefs)` participants were recorded. Missing values in the weight change (`wt82_71`) variable were excluded from the analysis (`r pct_missing`%), leaving `r n_total` participants for analysis. `r n_missing_died` of `r n_missing` missing values were from participants who died, biasing the analysis to healthier and younger individuals.
+**Data preparation and descriptive statistics:** In total, data for `r nrow(nhefs)` participants were recorded. Missing values in the weight change (`wt82_71`) variable were excluded from the analysis (`r n_missing` participants, `r sprintf("%.1f", pct_missing)`%), leaving `r n_total` participants for analysis.
 
 **Bootstrapping the difference in medians:** 5 000 bootstrap samples were drawn with replacement from the original dataset, using the stratified bootstrap method. For each sample, the median weight change was calculated for both quitters and non-quitters, and the difference in medians was computed. The distribution of these differences across all bootstrap samples was used to estimate the standard error and construct confidence intervals.
 
-**Regression to determine the adjusted effect of quitting:** Linear regression was used to estimate the adjusted effect of quitting smoking on weight change, controlling for baseline weight and other covariates. The regression model was fitted to each bootstrap sample to obtain a distribution of the adjusted effect estimates using the fixed (case) and random (residual) approach.
+**Regression to determine the adjusted effect of quitting:** Linear regression was used to estimate the adjusted effect of quitting smoking on weight change, adjusting for sex, race, age, education, smoking intensity (cigarettes per day), years of smoking, recreational exercise, daily physical activity and baseline (1971) weight. The regression model was fitted to each bootstrap sample to obtain a distribution of the adjusted effect estimates using the fixed (case) and random (residual) approach.
 
 **Monte Carlo error:** Last, a Monte Carlo simulation was run to determine the variability in the bootstrap estimates due to the finite number of bootstrap samples. This was done by repeating the bootstrapping procedure 20 times and examining the variability in the resulting estimates.
 
@@ -156,7 +183,7 @@ abline(v = 0, lty = 2, col = uct_cols["steel"], lwd = 2)
 
 __Regression to determine the adjusted effect of quitting:__
 
-A linear regression of weight change on quitting, adjusted for sex, race, age, education, smoking intensity, years of smoking, exercise, physical activity and baseline weight, estimated that quitters gained on average `r sprintf("%.2f", coef(model)["qsmk"])` kg more than non-quitters. @tbl-regression-boot compares three ways of estimating the uncertainty of this coefficient: the linear regression formula, the case bootstrap and the residual bootstrap. The conventional formula assumes that the errors are independent, normally distributed and have constant variance.
+The adjusted linear regression estimated that quitters gained on average `r sprintf("%.2f", coef(model)["qsmk"])` kg more than non-quitters. @tbl-regression-boot compares three ways of estimating the uncertainty of this coefficient: the linear regression formula, the case bootstrap and the residual bootstrap. The conventional formula assumes that the errors are independent, normally distributed and have constant variance.
 
 The case bootstrap resamples whole participants with replacement, treating the predictors as random. The model was refitted to 5000 resamples, and the spread of the `qsmk` coefficients was used to estimate the standard error. Because it does not assume constant variance, it remains valid under heteroscedasticity. In this analysis it produced a slightly wider confidence interval than the other two methods.
 
@@ -178,7 +205,7 @@ comparison_tab <- data.frame(
 knitr::kable(comparison_tab, align = "lrrr", row.names = FALSE,
              col.names = c("Method", "Estimate (kg)", "SE", "95% CI"))
 ```
-@fig-resid illustrate the residual diagnostics for the regression model.  The right panel shows the residuals by smoking status.
+@fig-resid illustrates the residual diagnostics for the regression model.  The right panel shows the residuals by smoking status.
 
 ```{r}
 #| label: fig-resid
@@ -209,7 +236,7 @@ boxplot(resid(model) ~ dat$qsmk,
 
 ```
 
-The residuals were scattered evenly around zero with no clear pattern across the fitted values, and their spread was similar amog both quitters and non-quitters. The plots show no clear violation of the constant variance assumption.
+The residuals were scattered evenly around zero with no clear pattern across the fitted values, and their spread was similar among both quitters and non-quitters. The plots show no clear violation of the constant variance assumption.
 
 __Monte Carlo error:__ Monte Carlo error is the random variation in a bootstrap result caused by using a specific number of resamples ($B$). To assess Monte Carlo error, the case bootstrap was repeated 20 times for each of $B$ = 200, 1 000, 5 000 and 10 000 replicates. @tbl-mc-summary shows that the range of the standard error and of the 95% confidence interval limits across runs became smaller with more replicates. The variability between runs decreased as $B$ increased, further seen in @fig-mc-se, [Appendix C](#sec-appendix-mc). 
 
@@ -244,11 +271,11 @@ The median weight gain among quitters was 1.8 kg (95% BCa CI 0.9 to 2.7 kg) high
 
 **The adjusted effect standard errors.** The case bootstrap resamples whole participants, and only assumes that participants are independent. The residual bootstrap and the conventional linear regression formula also assume that every participant has the same error variance. The case bootstrap is preferred because it relies on the fewest assumptions. It gave a slightly larger standard error, suggesting the equal-variance assumption may not fully hold, although all three methods give the same conclusion.
 
-**Choice of $B$.** The variability of the case bootstrap standard error and confidence limits across repeated runs decreased as $B$ increased (@tbl-mc-summary). Confidence limits depend on the tails of the bootstrap distribution and need more replicates than the standard error.$B$ = 5 000 or is sufficient for reporting intervals.
+**Choice of $B$.** The variability of the case bootstrap standard error and confidence limits across repeated runs decreased as $B$ increased (@tbl-mc-summary). Confidence limits depend on the tails of the bootstrap distribution and need more replicates than the standard error. $B$ = 5 000 is sufficient for reporting intervals.
 
 **Assumptions and limitations.** The bootstrap assumes that participants are independent and representative of the target population, and that the sample is large enough for the bootstrap distribution to approximate the sampling distribution. These assumptions are reasonable for NHEFS. The bootstrap can fail in small samples, for non-smooth statistics such as a maximum, with clustered data unless whole clusters are resampled, and when the resampling scheme does not match the data.
 
-The bootstrap only measures sampling variability. It cannot correct for confounding or for bias from missing outcomes. Weight change was missing for `r n_missing` participants, who were older and more likely to have died during follow-up ([Appendix B](#sec-appendix-missing)), so the results mainly describe healthier survivors. These estimates are adjusted associations, not causal effects.
+The bootstrap only measures sampling variability. It cannot correct for confounding or for bias from missing outcomes. Weight change was missing for `r n_missing` participants, who were older and more likely to have died during follow-up (`r n_missing_died` of `r n_missing` died; [Appendix B](#sec-appendix-missing)). Excluding them biases the analysis towards younger, healthier participants, so the results mainly describe healthier survivors. These estimates are adjusted associations, not causal effects.
 
 
 
@@ -308,11 +335,11 @@ knitr::kable(as.data.frame(bl_rows), align = "lrr", row.names = FALSE,
 
 # Appendix B: Missing data {#sec-appendix-missing .unnumbered}
 
-Weight change (`wt82_71`) was missing for `r n_missing` of `r nrow(nhefs)` participants (`r sprintf("%.1f", pct_missing)`%). @tbl-missingness compares their baseline characteristics with those of participants who had an observed outcome.
+Weight change (`wt82_71`) was missing for `r n_missing` of `r nrow(nhefs)` participants (`r sprintf("%.1f", pct_missing)`%). @tbl-missingness compares their baseline characteristics with those of participants who had an observed outcome. `r n_missing_died` of the `r n_missing` participants with missing weight change (`r sprintf("%.1f", miss_death$pct_Missing)`%) died during follow-up, compared with `r sprintf("%.1f", miss_death$pct_Observed)`% of those with an observed outcome. Income is recorded as an ordinal category code rather than an amount, so it is summarised as a median and interquartile range and compared with a Wilcoxon rank-sum test.
 
 ```{r}
 #| label: tbl-missingness
-#| tbl-cap: 'Baseline characteristics of participants with missing and observed weight change`#linebreak()`{=typst}`#text(size: 0.85em, style: "italic")[SMD = standardised mean difference; p-values from Welch t-tests]`{=typst}'
+#| tbl-cap: 'Baseline characteristics of participants with missing and observed weight change`#linebreak()`{=typst}`#text(size: 0.85em, style: "italic")[Mean, except n (%) for died and median [IQR] for income category (ordinal code). SMD = standardised mean difference. p-values from Welch t-tests, except Fisher's exact test (died) and Wilcoxon rank-sum test (income)]`{=typst}'
 #| echo: false
 
 miss_labels <- c(
@@ -321,7 +348,6 @@ miss_labels <- c(
   ht             = "Height (cm)",
   smokeintensity = "Cigarettes per day",
   smokeyrs       = "Years smoked",
-  income         = "Income category",
   cholesterol    = "Cholesterol (mg/dL)",
   sbp            = "Systolic BP (mmHg)",
   dbp            = "Diastolic BP (mmHg)"
@@ -333,6 +359,28 @@ miss_cont_tab <- data.frame(
   Observed = sprintf("%.1f", miss_cont$Mean_Observed),
   SMD      = sprintf("%.2f", miss_cont$SMD),
   p        = ifelse(miss_cont$p < 0.001, "<0.001", sprintf("%.3f", miss_cont$p))
+)
+
+fmt_p <- function(p) ifelse(p < 0.001, "<0.001", sprintf("%.3f", p))
+
+miss_cont_tab <- rbind(
+  miss_cont_tab,
+  data.frame(
+    Variable = "Died during follow-up, n (%)",
+    Missing  = sprintf("%d (%.1f)", miss_death$n_Missing, miss_death$pct_Missing),
+    Observed = sprintf("%d (%.1f)", miss_death$n_Observed, miss_death$pct_Observed),
+    SMD      = sprintf("%.2f", miss_death$SMD),
+    p        = fmt_p(miss_death$p)
+  ),
+  data.frame(
+    Variable = "Income category, median [IQR]",
+    Missing  = sprintf("%g [%g, %g]", miss_income$Median_Missing,
+                       miss_income$Q1_Missing, miss_income$Q3_Missing),
+    Observed = sprintf("%g [%g, %g]", miss_income$Median_Observed,
+                       miss_income$Q1_Observed, miss_income$Q3_Observed),
+    SMD      = "\u2014",
+    p        = fmt_p(miss_income$p)
+  )
 )
 
 knitr::kable(
