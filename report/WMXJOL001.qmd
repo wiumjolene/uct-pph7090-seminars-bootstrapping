@@ -183,27 +183,22 @@ boxplot(resid(model) ~ dat$qsmk,
 
 __Monte Carlo error:__
 
+
+
 ```{r}
-#| label: fig-mc-se
-#| fig-cap: 'Monte Carlo stability of the case-bootstrap standard error`#linebreak()`{=typst}`#text(size: 0.85em, style: "italic")[Each line is one of 20 independent runs of the case bootstrap at each value of B]`{=typst}'
-#| fig-width: 7
-#| fig-height: 4.5
+#| label: tbl-mc-summary
+#| tbl-cap: 'Monte Carlo variability of the case bootstrap by number of replicates`#linebreak()`{=typst}`#text(size: 0.85em, style: "italic")[Range (max − min, kg) across 20 independent runs at each value of B]`{=typst}'
 #| echo: false
 
-par(col.main = unname(uct_cols["navy"]), col.lab = unname(uct_cols["navy"]),
-    col.axis = unname(uct_cols["navy"]), fg = unname(uct_cols["navy"]))
+mc_summary_tab <- data.frame(
+  B        = format(mc_summary$B, big.mark = "\u00a0"),
+  SE       = sprintf("%.4f", mc_summary$SE_Range),
+  CI       = sprintf("%.3f, %.3f", mc_summary$Lower_CI_Range,
+                     mc_summary$Upper_CI_Range)
+)
 
-plot(NA, xlim = range(B_values), ylim = range(mc_results$SE), log = "x",
-     xaxt = "n", xlab = "Bootstrap replicates (B)", ylab = "Bootstrap SE (kg)",
-     main = "")
-axis(1, at = B_values, labels = format(B_values, big.mark = " "))
-
-mc_line_cols <- rep_len(uct_cols, n_runs)
-for (run in seq_len(n_runs)) {
-  d <- subset(mc_results, Run == run)
-  lines(d$B, d$SE, type = "b", pch = 19, cex = 0.7,
-        col = adjustcolor(mc_line_cols[run], alpha.f = 0.7))
-}
+knitr::kable(mc_summary_tab, align = "rcc", row.names = FALSE,
+             col.names = c("B", "SE", "95% CI"))
 ```
 
 # Discussion
@@ -266,7 +261,9 @@ for (f in c("src/analysis.R")) {
 }
 ```
 
+{{< pagebreak >}}
 
+# Appendix C: Monte Carlo Error {.unnumbered}
 
 
 ```{r}
@@ -293,6 +290,30 @@ for (f in c("src/analysis.R", "src/bootstrap.R")) {
   cat("**", f, "**\n\n```r\n", sep = "")
   cat(readLines(f), sep = "\n")
   cat("\n```\n\n")
+}
+```
+
+
+```{r}
+#| label: fig-mc-se
+#| fig-cap: 'Monte Carlo stability of the case-bootstrap standard error`#linebreak()`{=typst}`#text(size: 0.85em, style: "italic")[Each line is one of 20 independent runs of the case bootstrap at each value of B]`{=typst}'
+#| fig-width: 7
+#| fig-height: 4.5
+#| echo: false
+
+par(col.main = unname(uct_cols["navy"]), col.lab = unname(uct_cols["navy"]),
+    col.axis = unname(uct_cols["navy"]), fg = unname(uct_cols["navy"]))
+
+plot(NA, xlim = range(B_values), ylim = range(mc_results$SE), log = "x",
+     xaxt = "n", xlab = "Bootstrap replicates (B)", ylab = "Bootstrap SE (kg)",
+     main = "")
+axis(1, at = B_values, labels = format(B_values, big.mark = " "))
+
+mc_line_cols <- rep_len(uct_cols, n_runs)
+for (run in seq_len(n_runs)) {
+  d <- subset(mc_results, Run == run)
+  lines(d$B, d$SE, type = "b", pch = 19, cex = 0.7,
+        col = adjustcolor(mc_line_cols[run], alpha.f = 0.7))
 }
 ```
 
