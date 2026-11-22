@@ -7,13 +7,13 @@ library(boot)
 
 # ----- Colour scheme ----------------------------------------------------------
 uct_cols <- c(
-  navy    = "#053259",  # primary: titles, axes
-  blue    = "#1668A3",  # first series
-  teal    = "#12999E",  # second series
-  magenta = "#C32A66",  # callouts / estimates
-  steel   = "#7196B7",  # neutral: reference lines, borders
-  amber   = "#FCB028",  # highlights
-  coral   = "#FA615C"   # alerts
+  navy    = "#053259",
+  blue    = "#1668A3",
+  teal    = "#12999E",
+  magenta = "#C32A66",
+  steel   = "#7196B7",
+  amber   = "#FCB028",
+  coral   = "#FA615C"
 )
 par(col.main = uct_cols["navy"], col.lab = uct_cols["navy"],
     col.axis = uct_cols["navy"], fg = uct_cols["navy"])
