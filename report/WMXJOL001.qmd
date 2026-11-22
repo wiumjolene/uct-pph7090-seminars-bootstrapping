@@ -11,6 +11,7 @@ format:
       y: 2.5cm
     fontsize: 11pt
     section-numbering: "1."
+    page-numbering: false
     include-in-header:
       text: |
         #show table.cell: set par(justify: false)
@@ -44,12 +45,19 @@ knitr:
 #| cache.extra: !expr tools::md5sum("src/analysis.R")
 source("src/analysis.R")
 ```
-{{< pagebreak >}}
+
+```{=typst}
+#set page(numbering: "i")
+#counter(page).update(2)
+```
 
 # Plagiarism Declaration
 
 
-{{< pagebreak >}}
+```{=typst}
+#set page(numbering: "1")
+#counter(page).update(1)
+```
 
 # Introduction
 <!-- > _Estimate the difference in weight change between quitters and non-quitters, and its uncertainty, in situations where the standard formulas either don’t exist or might not be appropriate._ -->
