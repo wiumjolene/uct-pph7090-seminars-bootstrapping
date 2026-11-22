@@ -87,8 +87,10 @@ Next, the results of the analysis are presented.
 
 In total, data for 1929 participants were recorded. Missing values in the weight change (`wt82_71`) variable were excluded from the analysis (`r pct_missing`%), leaving `r n_total` participants for analysis. 27 of `r n_missing` missing values were from participants who died, biasing the analysis to healthier and younger individuals.
 
+__Descriptive statistics:__
 Of the `r n_total` participants, `r n_quit` (`r round(100 * n_quit / n_total, 1)`%) quit smoking while `r n_cont` participants continued smoking until 1982. The median weight change was `r round(med_diff, 2)` kg higher among those who quit smoking (`r round(med_quit, 2)` kg) than those who continued smoking (`r round(med_cont, 2)` kg).
 
+__Bootstrapping the difference in medians:__
 Bootsrapping the difference in median weight change between quitters and non-quitters produced a mean estimate of `r round(median_boot$t0, 2)` kg with a standard error of `r round(median_se, 2)` kg. The 95% confidence interval for the difference in medians was estimated to be `r sprintf("(%.2f, %.2f)", median_ci$percent[4], median_ci$percent[5])` kg using the percentile method and `r sprintf("(%.2f, %.2f)", median_ci$bca[4], median_ci$bca[5])` kg using the bias-corrected and accelerated (BCa) method (@tbl-median-boot).
 
 ```{r}
@@ -124,23 +126,30 @@ tab
 ```
 
 
+__Regression to determine the adjusted effect of quitting:__
+
+Conventional OLS assumes the residuals has homoscedasticity, are independent and normally distributed. 
+
+Case bootstrap resamples whole participants with replacement, meaning each person's outcome and covariates stay together. It refits the model 5000 times and use the spread of the coefficients to determine the standard error, resulting in a slighlty wider confidence interval. An advantage is that it can be employed under heteroscedasticity and it does not assume constant variance. 
+
+Residual bootstrap (your loop with y_star <- fitted_y + sampled_resid) keeps every participant's covariates fixed. It takes the fitted values from your model and adds residuals drawn at random from the whole pool. It then refits and records the qsmk coefficient each time. It treats the predictors as fixed, as in a designed experiment, and assumes the model is correctly specified and the errors are exchangeable, meaning they all come from one distribution with the same variance. Shuffling residuals across people makes that assumption explicit. If quitters have more spread-out residuals than non-quitters, it mixes them together and hides the difference. That's why its results usually land close to the conventional OLS SE. It relaxes only the normality assumption, not the constant-variance one.
+
+
 ```{r}
-#| label: fig-median-boot
-#| fig-cap: "Bootstrap distribution of the difference in median weight change (quitters − non-quitters), R = 5000. The solid line is the observed estimate; the dashed line marks zero."
-#| fig-width: 7
-#| fig-height: 4.5
+#| label: tbl-regression-boot
+#| tbl-cap: 'Adjusted effect of quitting smoking on weight change`#linebreak()`{=typst}`#text(size: 0.85em, style: "italic")[Conventional vs bootstrap standard errors; R = 5000, percentile 95% CIs for bootstrap methods]`{=typst}'
 #| echo: false
 
-par(col.main = uct_cols["navy"], col.lab = uct_cols["navy"],
-    col.axis = uct_cols["navy"], fg = uct_cols["navy"])
+comparison_tab <- data.frame(
+  Method   = comparison$Method,
+  Estimate = sprintf("%.2f", comparison$Estimate),
+  SE       = sprintf("%.3f", comparison$SE),
+  CI       = sprintf("(%.2f, %.2f)", comparison$CI_Lower, comparison$CI_Upper)
+)
 
-hist(median_boot$t[, 1], breaks = 40, col = uct_cols["blue"],
-     border = "white", main = "",
-     xlab = "Difference in median weight change (kg)")
-abline(v = median_boot$t0, col = uct_cols["magenta"], lwd = 2)
-abline(v = 0, lty = 2, col = uct_cols["steel"])
+knitr::kable(comparison_tab, align = "lccc", row.names = FALSE,
+             col.names = c("Method", "Estimate (kg)", "SE", "95% CI"))
 ```
-
 
 
 ```{r}
@@ -179,7 +188,78 @@ Interpret your results in plain language, discuss whether the assumptions of the
 
 {{< pagebreak >}}
 
-# Appendix: code {.unnumbered}
+# Appendix A: Missing data {.unnumbered}
+
+Weight change (`wt82_71`) was missing for `r n_missing` of `r nrow(nhefs)` participants (`r sprintf("%.1f", pct_missing)`%). @tbl-missingness compares their baseline characteristics with those of participants who had an observed outcome.
+
+```{r}
+#| label: tbl-missingness
+#| tbl-cap: 'Baseline characteristics of participants with missing and observed weight change`#linebreak()`{=typst}`#text(size: 0.85em, style: "italic")[SMD = standardised mean difference; p-values from Welch t-tests]`{=typst}'
+#| echo: false
+
+miss_labels <- c(
+  age            = "Age (years)",
+  wt71           = "Weight in 1971 (kg)",
+  ht             = "Height (cm)",
+  smokeintensity = "Cigarettes per day",
+  smokeyrs       = "Years smoked",
+  income         = "Income category",
+  cholesterol    = "Cholesterol (mg/dL)",
+  sbp            = "Systolic BP (mmHg)",
+  dbp            = "Diastolic BP (mmHg)"
+)
+
+miss_cont_tab <- data.frame(
+  Variable = miss_labels[miss_cont$Variable],
+  Missing  = sprintf("%.1f", miss_cont$Mean_Missing),
+  Observed = sprintf("%.1f", miss_cont$Mean_Observed),
+  SMD      = sprintf("%.2f", miss_cont$SMD),
+  p        = ifelse(miss_cont$p < 0.001, "<0.001", sprintf("%.3f", miss_cont$p))
+)
+
+knitr::kable(
+  miss_cont_tab, align = "lcccc", row.names = FALSE,
+  col.names = c("Variable",
+                sprintf("Missing (n = %d)", n_missing),
+                sprintf("Observed (n = %d)", nrow(nhefs) - n_missing),
+                "SMD", "p")
+)
+```
+
+{{< pagebreak >}}
+
+# Appendix B: Code {.unnumbered}
+
+
+```{r}
+#| results: asis
+for (f in c("src/analysis.R")) {
+  cat("**", f, "**\n\n```r\n", sep = "")
+  cat(readLines(f), sep = "\n")
+  cat("\n```\n\n")
+}
+```
+
+
+
+
+```{r}
+#| label: fig-median-boot
+#| fig-cap: "Bootstrap distribution of the difference in median weight change (quitters − non-quitters), R = 5000. The solid line is the observed estimate; the dashed line marks zero."
+#| fig-width: 7
+#| fig-height: 4.5
+#| echo: false
+
+par(col.main = uct_cols["navy"], col.lab = uct_cols["navy"],
+    col.axis = uct_cols["navy"], fg = uct_cols["navy"])
+
+hist(median_boot$t[, 1], breaks = 40, col = uct_cols["blue"],
+     border = "white", main = "",
+     xlab = "Difference in median weight change (kg)")
+abline(v = median_boot$t0, col = uct_cols["magenta"], lwd = 2)
+abline(v = 0, lty = 2, col = uct_cols["steel"])
+```
+
 
 ```{r}
 #| results: asis
@@ -189,3 +269,5 @@ for (f in c("src/analysis.R", "src/bootstrap.R")) {
   cat("\n```\n\n")
 }
 ```
+
+
