@@ -105,13 +105,13 @@ The methods section describes how bootstrapping is used for this analysis. The r
 
 The analysis uses data from the first US National Health and Nutrition Examination Survey Epidemiologic Follow-up Study (NHEFS). This analysis includes the 1629 participants who were smokers at baseline, followed from 1971 to 1982 and observed their weight change. The exposure used in this analysis is smoking status (quitters versus non-quitters). 
 
-The analysis can be divided into four phases: data preparation and descriptive statistics, bootstrapping the difference in medians, regression analysis to estimate the adjusted effect of smoking cessation and, last, the Monte Carlo method to determine error.
+The analysis can be divided into four phases: data preparation and descriptive statistics, bootstrapping the difference in medians, regression analysis to estimate the adjusted associations of smoking cessation and, last, the Monte Carlo method to determine error.
 
 **Data preparation and descriptive statistics:** In total, data for `r nrow(nhefs)` participants were recorded. Missing values in the weight change (`wt82_71`) variable were excluded from the analysis (`r n_missing` participants, `r sprintf("%.1f", pct_missing)`%), leaving `r n_total` participants for analysis.
 
 **Bootstrapping the difference in medians:** 5 000 bootstrap samples were drawn with replacement from the original dataset, using a stratified bootstrap: quitters and non-quitters were resampled separately, so that each resample kept the observed number of quitters and non-quitters. This keeps the precision of each group's median the same as in the observed data and prevents resamples in which one group, particularly the smaller quitter group, is under represented. For each sample, the median weight change was calculated for both quitters and non-quitters, and the difference in medians was computed. The distribution of these differences across all bootstrap samples was used to estimate the standard error and construct confidence intervals.
 
-**Regression to determine the adjusted effect of quitting:** Linear regression was used to estimate the adjusted effect of quitting smoking on weight change, adjusting for sex, race, age, education, smoking intensity (cigarettes per day), years of smoking, recreational exercise, daily physical activity and baseline (1971) weight. The regression model was fitted to each bootstrap sample to obtain a distribution of the adjusted effect estimates using the fixed (residual) and random (case) approach.
+**Regression to determine the adjusted associations of quitting:** Linear regression was used to estimate the adjusted associations of quitting smoking on weight change, adjusting for sex, race, age, education, smoking intensity (cigarettes per day), years of smoking, recreational exercise, daily physical activity and baseline (1971) weight. The regression model was fitted to each bootstrap sample to obtain a distribution of the adjusted effect estimates using the fixed (residual) and random (case) approach.
 
 **Monte Carlo error:** Last, a Monte Carlo simulation was run to determine the variability in the bootstrap estimates due to the finite number of bootstrap samples. This was done by repeating the bootstrapping procedure 20 times and examining the variability in the resulting estimates.
 
@@ -178,7 +178,7 @@ abline(v = 0, lty = 2, col = uct_cols["steel"], lwd = 2)
 ```
 
 
-__Regression to determine the adjusted effect of quitting:__
+__Regression to determine the adjusted associations of quitting:__
 The adjusted linear regression estimated that quitters gained on average `r sprintf("%.2f", coef(model)["qsmk"])` kg more than non-quitters. @tbl-regression-boot compares three ways of estimating the uncertainty of this coefficient: the linear regression formula, the case bootstrap and the residual bootstrap. The conventional formula assumes that the errors are independent, normally distributed and have constant variance.
 
 The case bootstrap resamples whole participants with replacement, treating the predictors as random. The model was refitted to 5000 resamples, and the spread of the `qsmk` coefficients was used to estimate the standard error. Because it does not assume constant variance, it remains valid under heteroscedasticity. In this analysis it produced a slightly wider confidence interval than the other two methods.
@@ -188,7 +188,7 @@ The residual bootstrap treats the predictors as fixed at their observed values. 
 
 ```{r}
 #| label: tbl-regression-boot
-#| tbl-cap: 'Adjusted effect of quitting smoking on weight change`#linebreak()`{=typst}`#text(size: 0.85em, style: "italic")[Conventional vs bootstrap standard errors; R = 5000, percentile 95% CIs for bootstrap methods]`{=typst}'
+#| tbl-cap: 'Adjusted associations of quitting smoking on weight change`#linebreak()`{=typst}`#text(size: 0.85em, style: "italic")[Conventional vs bootstrap standard errors; R = 5000, percentile 95% CIs for bootstrap methods]`{=typst}'
 #| echo: false
 
 comparison_tab <- data.frame(
@@ -269,7 +269,8 @@ These two estimates are not directly comparable. The median difference is unadju
 
 **Confidence intervals for the median difference.** Both the percentile and BCa methods gave similar confidence intervals for the difference in medians. The BCa method is preferred because it corrects for bias and skewness in the bootstrap distribution. However, the median is not a smooth statistic (@fig-median-boot), so the BCa adjustment may be less reliable; the similar percentile interval supports the result.
 
-**The adjusted effect standard errors.** The case bootstrap resamples whole participants, and only assumes that participants are independent. The residual bootstrap and the conventional linear regression formula also assume that every participant has the same error variance. The case bootstrap is preferred because it relies on the fewest assumptions. Its standard error was slightly larger (`r sprintf("%.3f", case_se)` vs `r sprintf("%.3f", coef(summary(model))["qsmk", "Std. Error"])` kg). The difference of `r sprintf("%.3f", case_se - coef(summary(model))["qsmk", "Std. Error"])` kg is about twice the run-to-run range of the case-bootstrap SE at $B$ = 5 000 (`r sprintf("%.3f", mc_summary$SE_Range[mc_summary$B == 5000])` kg; @tbl-mc-summary), so it is unlikely to be Monte Carlo error alone and points to mild heteroscedasticity that the residual plots (@fig-resid) are not sensitive enough to show, although all three methods give the same conclusion.
+**The adjusted association standard errors.** The case bootstrap resamples whole participants and does not require the constant error variance assumption of conventional linear regression and residual bootstrapping. Its standard error was slightly larger than that of conventional linear regression (0.477 versus 0.441 kg) as seen in @tbl-mc-summary. This difference is unlikely to be explained entirely by Monte Carlo variation at 5,000 replicates and may reflect differences in the assumptions underlying the methods, including sensitivity to unequal error variances. However, the residual plots (@fig-resid) showed no clear evidence of heteroscedasticity, so the reason for the difference remains uncertain. All three methods produced similar confidence intervals and the same overall conclusion.
+
 
 **Choice of $B$.** The variability of the case bootstrap standard error and confidence limits across repeated runs decreased as $B$ increased (@tbl-mc-summary). Confidence limits depend on the tails of the bootstrap distribution and need more replicates than the standard error. $B$ = 5 000 is sufficient for reporting intervals.
 
