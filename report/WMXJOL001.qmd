@@ -42,8 +42,9 @@ knitr:
 #| label: setup
 #| include: false
 #| cache: true
-#| cache.extra: !expr tools::md5sum("src/analysis.R")
+#| cache.extra: !expr tools::md5sum(c("src/analysis.R", "src/missing_data.R"))
 source("src/analysis.R")
+source("src/missing_data.R")
 ```
 
 ```{=typst}
@@ -79,7 +80,7 @@ The analysis can be divided into four phases: data preparation and descriptive s
 
 
 
-**Data preparation and descriptive statistics:** In total, data for 1929 participants were recorded. Missing values in the weight change (`wt82_71`) variable were excluded from the analysis (`r pct_missing`%), leaving `r n_total` participants for analysis. 27 of `r n_missing` missing values were from participants who died, biasing the analysis to healthier and younger individuals.
+**Data preparation and descriptive statistics:** In total, data for `r nrow(nhefs)` participants were recorded. Missing values in the weight change (`wt82_71`) variable were excluded from the analysis (`r pct_missing`%), leaving `r n_total` participants for analysis. `r n_missing_died` of `r n_missing` missing values were from participants who died, biasing the analysis to healthier and younger individuals.
 
 **Bootstrapping the difference in medians:** 5 000 bootstrap samples were drawn with replacement from the original dataset, using the stratified bootstrap method. For each sample, the median weight change was calculated for both quitters and non-quitters, and the difference in medians was computed. The distribution of these differences across all bootstrap samples was used to estimate the standard error and construct confidence intervals.
 
@@ -155,7 +156,7 @@ abline(v = 0, lty = 2, col = uct_cols["steel"], lwd = 2)
 
 __Regression to determine the adjusted effect of quitting:__
 
-A linear regression of weight change on quitting, adjusted for sex, race, age, education, smoking intensity, years of smoking, exercise, physical activity and baseline weight, estimated that quitters gained on average `r sprintf("%.2f", coef(model)["qsmk"])` kg more than non-quitters. @tbl-regression-boot compares three ways of estimating the uncertainty of this coefficient: the conventional OLS formula, the case bootstrap and the residual bootstrap. The conventional formula assumes that the errors are independent, normally distributed and have constant variance.
+A linear regression of weight change on quitting, adjusted for sex, race, age, education, smoking intensity, years of smoking, exercise, physical activity and baseline weight, estimated that quitters gained on average `r sprintf("%.2f", coef(model)["qsmk"])` kg more than non-quitters. @tbl-regression-boot compares three ways of estimating the uncertainty of this coefficient: the linear regression formula, the case bootstrap and the residual bootstrap. The conventional formula assumes that the errors are independent, normally distributed and have constant variance.
 
 The case bootstrap resamples whole participants with replacement, treating the predictors as random. The model was refitted to 5000 resamples, and the spread of the `qsmk` coefficients was used to estimate the standard error. Because it does not assume constant variance, it remains valid under heteroscedasticity. In this analysis it produced a slightly wider confidence interval than the other two methods.
 
@@ -210,8 +211,7 @@ boxplot(resid(model) ~ dat$qsmk,
 
 The residuals were scattered evenly around zero with no clear pattern across the fitted values, and their spread was similar amog both quitters and non-quitters. The plots show no clear violation of the constant variance assumption.
 
-__Monte Carlo error:__
-To assess Monte Carlo error, the case bootstrap was repeated 20 times for each of $B$ = 200, 1 000, 5 000 and 10 000 replicates. The bootstrap standard error stayed close to the same value for every $B$, but the variability between runs decreased as $B$ increased (@fig-mc-se, [Appendix C](#sec-appendix-mc)). @tbl-mc-summary shows that the range of the standard error and of the 95% confidence interval limits across runs became smaller with more replicates.
+__Monte Carlo error:__ Monte Carlo error is the random variation in a bootstrap result caused by using a specific number of resamples ($B$). To assess Monte Carlo error, the case bootstrap was repeated 20 times for each of $B$ = 200, 1 000, 5 000 and 10 000 replicates. @tbl-mc-summary shows that the range of the standard error and of the 95% confidence interval limits across runs became smaller with more replicates. The variability between runs decreased as $B$ increased, further seen in @fig-mc-se, [Appendix C](#sec-appendix-mc). 
 
 ```{r}
 #| label: tbl-mc-summary
@@ -242,13 +242,13 @@ The median weight gain among quitters was 1.8 kg (95% BCa CI 0.9 to 2.7 kg) high
 
 **Confidence intervals for the median difference.** Both the percentile and BCa methods gave similar confidence intervals for the difference in medians, which were slightly wider than the normal approximation. The BCa method is preferred because it corrects for bias and skewness in the bootstrap distribution.
 
-**Standard errors for the adjusted effect.** The case bootstrap resamples whole participants, and only assumes that participants are independent. The residual bootstrap and the conventional OLS formula also assume that every participant has the same error variance. The case bootstrap is preferred because it relies on the fewest assumptions. It gave a slightly larger standard error, suggesting the equal-variance assumption may not fully hold, although all three methods give the same conclusion.
+**The adjusted effect standard errors.** The case bootstrap resamples whole participants, and only assumes that participants are independent. The residual bootstrap and the conventional linear regression formula also assume that every participant has the same error variance. The case bootstrap is preferred because it relies on the fewest assumptions. It gave a slightly larger standard error, suggesting the equal-variance assumption may not fully hold, although all three methods give the same conclusion.
 
-**Choice of $B$.** The variability of the case bootstrap standard error and confidence limits across repeated runs decreased as $B$ increased (@tbl-mc-summary). Confidence limits depend on the tails of the bootstrap distribution and need more replicates than the standard error, so $B$ = 5 000 or more is recommended for reporting intervals.
+**Choice of $B$.** The variability of the case bootstrap standard error and confidence limits across repeated runs decreased as $B$ increased (@tbl-mc-summary). Confidence limits depend on the tails of the bootstrap distribution and need more replicates than the standard error.$B$ = 5 000 or is sufficient for reporting intervals.
 
 **Assumptions and limitations.** The bootstrap assumes that participants are independent and representative of the target population, and that the sample is large enough for the bootstrap distribution to approximate the sampling distribution. These assumptions are reasonable for NHEFS. The bootstrap can fail in small samples, for non-smooth statistics such as a maximum, with clustered data unless whole clusters are resampled, and when the resampling scheme does not match the data.
 
-The bootstrap only measures sampling variability. It cannot correct for confounding or for bias from missing outcomes. Weight change was missing for 63 participants, who were older and more likely to have died during follow-up ([Appendix B](#sec-appendix-missing)), so the results mainly describe healthier survivors. These estimates are adjusted associations, not causal effects.
+The bootstrap only measures sampling variability. It cannot correct for confounding or for bias from missing outcomes. Weight change was missing for `r n_missing` participants, who were older and more likely to have died during follow-up ([Appendix B](#sec-appendix-missing)), so the results mainly describe healthier survivors. These estimates are adjusted associations, not causal effects.
 
 
 
@@ -381,7 +381,7 @@ for (run in seq_len(n_runs)) {
 
 ```{r}
 #| results: asis
-for (f in c("src/analysis.R")) {
+for (f in c("src/analysis.R", "src/missing_data.R")) {
   cat("**", f, "**\n\n```r\n", sep = "")
   cat(readLines(f), sep = "\n")
   cat("\n```\n\n")
