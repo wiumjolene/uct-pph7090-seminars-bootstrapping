@@ -15,15 +15,15 @@ renv/staging/
 
 # ----- Quarto / knitr build artefacts -----------------------------------------
 # Regenerated on every render; only the final PDF is kept under version control.
-# .quarto/
-# **/.quarto/
-# *_cache/
-# *_files/
-# *.rmarkdown
-# *.knit.md
-# *.utf8.md
-# *.typ
-# !report/*.typ
+.quarto/
+**/.quarto/
+*_cache/
+*_files/
+*.rmarkdown
+*.knit.md
+*.utf8.md
+*.typ
+!report/*.typ
 
 # ----- Backups and scratch copies ---------------------------------------------
 *.bak
