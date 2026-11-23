@@ -2,25 +2,24 @@
 
 Nov 23, 2026 · Jolene Wium
 
-*"**Repetition is the mother of learning"** - my squash coach from 2004.*
-
-![Sky, my border collie, above a grid of 55 collie photos: 'A sample of 55 collies'](sky-collie-sample.jpg)
+*"Repetition is the mother of learning" - my squash coach from 2004.*
 
 How much does the average Border Collie in South Africa weigh?
 
 I could weigh Sky, my Border Collie, and ask another 54 owners to weigh theirs. How confident could I be that the average of those 55 dogs represents every Border Collie in the country?
 
+![Sky, my border collie, above a grid of 55 collie photos: 'A sample of 55 collies'](sky-collie-sample.jpg)
 
-In statistics, we usually work with a sample that stands in for a broader population. Sometimes you can measure every member of the population, such as the grades of every child in a particular class. Often, though, that's simply not practical. Take a question close to my heart (that's Sky above): how much does the average border collie in South Africa weigh? There's no way to put every collie in the country on a scale. So say I send a survey to the Border Collie Club of South Africa and 55 owners reply with their dog's weight. Those 55 dogs are my sample, and their average weight is my best guess for all border collies.
+In statistics, we usually work with a sample that stands in for a broader population. Sometimes you can measure every member of the population, such as the grades of every child in a particular class. Often, that's simply not practical. Take a question close to my heart (Sky above): how much does the average border collie in South Africa weigh? There's no way to put every collie in the country on a scale. So say I send a survey to the Border Collie Club of South Africa and 55 owners reply with their dog's weight. Those 55 dogs are my sample, and their average weight is my best guess for all border collies.
 
 The catch is that a sample is never a perfect copy of the population. If a different 55 owners had replied, I'd get a slightly different average, purely by chance. A sample can also be biased: club members might keep their dogs leaner than the average pet owner, or owners of farm dogs might never see the survey. Either way, the average on its own isn't enough. If my 55 collies average, say, 18 kg, is the true average give or take 0.2 kg, or give or take 3 kg? We need to report how far off it could plausibly be.
 
-I recently did an assignment on a technique that answers exactly this question, called bootstrapping, and I enjoyed the ideas behind it so much that I wanted to share it online. Bootstrapping literally means pulling yourself up from your bootstrings, an impossible task. Its the same as making data sense out of nothing.
+I recently did an assignment on a technique that answers exactly this question, called bootstrapping, and I enjoyed the ideas behind it so much that I wanted to share it online. Bootstrapping literally means pulling yourself up by your own bootstraps, an impossible task. It's the same as making data sense out of nothing.
 
 
-## The idea behind bootstapping
+## The idea behind bootstrapping
 
-The trick goes like this: you only have one sample. Draw a new "fake" sample from your original sample it *with replacement* (so some dogs get picked twice and some not at all), calculate your statistic, and repeat that thousands of times. The spread of all those recalculated answers tells you how much your original answer could have wobbled just by the luck of who ended up in your sample.
+The trick goes like this: you only have one sample. Draw a new "fake" sample from your original sample *with replacement* (so some dogs get picked twice and some not at all), calculate your statistic, and repeat that thousands of times. The spread of all those recalculated answers tells you how much your original answer could have wobbled just by the luck of who ended up in your sample.
 
 Nothing special. Just your sample data and a lot of repetition.
 
@@ -30,7 +29,7 @@ Back to the collies. Picture writing each of the 55 weights on a slip of paper a
 
 The most honest way to find out how much my collie average wobbles would be to repeat the survey: find another 55 border collies, weigh them, calculate the average again, and do that a few hundred times. The spread of all those averages is exactly the variability needed to know if the first sample represents the population.
 
-Bootstrapping swaps "repeat the survey" for "resample the replies you already have". You get thousands of plausible re-runs of your one study sample. These simulated reruns gives a standard error, or any interval you like (the 2.5th to 97.5th percentiles for a 95% interval, the 10th to 90th for an 80% one), for almost any statistic. It lets you answer "how sure are we?" for the statistic you obeserve, given a simple sample.
+Bootstrapping swaps "repeat the survey" for "resample the replies you already have". You get thousands of plausible re-runs of your one study sample. These simulated re-runs give a standard error, or any interval you like (the 2.5th to 97.5th percentiles for a 95% interval, the 10th to 90th for an 80% one), for almost any statistic. It lets you answer "how sure are we?" for the statistic you observe, given a single sample.
 
 ## A real example: quitting smoking and weight gain
 
@@ -48,7 +47,7 @@ I then used bootstrapping to check the uncertainty estimated by the regression m
 
 **Step 3: How many repetitions are enough?** Bootstrapping itself involves randomness, so I wanted to know whether 5,000 resamples were sufficient. I repeated the analysis 20 times, using 200, 1,000, 5,000 and 10,000 resamples. As the number increased, the results became more stable. By 5,000, the variation between runs was small enough for this analysis.
 
-I enjoyed was that the same simple principle worked throughout: repeat the analysis on resampled data and observe how much the answer changes.
+What I enjoyed was that the same simple principle worked throughout: repeat the analysis on resampled data and observe how much the answer changes.
 
 ## What bootstrapping can't do
 
@@ -64,10 +63,10 @@ In other words, bootstrapping is excellent at answering "how sure can I be, give
 
 Bootstrapping turns a statistics problem that might need pages of maths into something anyone with a laptop can do: reuse the data you have, many times over, and watch how much the answer moves. In my project it confirmed that quitters gained noticeably more weight, double-checked the textbook formulas, and even checked itself.
 
-For everyone else, the lesson travels well. Before you act on a number, whether it's a health reading, fruit weight in a vineyard, ask how much it could plausibly have varied. Sometimes the best way to understand your data is to shake it up a few thousand times and see what falls out.
+For everyone else, the lesson travels well. Before you act on a number, whether it's a health reading or fruit weight in a vineyard, ask how much it could plausibly have varied. Sometimes the best way to understand your data is to shake it up a few thousand times and see what falls out.
 
 ---
 
-*Data: NHEFS, a publicly available follow-up of the first US National Health and Nutrition Examination Survey. Analysis done in R with 5,000 bootstrap replicates as part of the PPH7090S Seminars in Epidemiology and Biostatistics** at the University of Cape Town.*
+*Data: NHEFS, a publicly available follow-up of the first US National Health and Nutrition Examination Survey. Analysis done in R with 5,000 bootstrap replicates as part of the PPH7090S Seminars in Epidemiology and Biostatistics at the University of Cape Town.*
 
 *The Border Collie Club survey is an illustrative example, not real data. How cute is Sky though?*
