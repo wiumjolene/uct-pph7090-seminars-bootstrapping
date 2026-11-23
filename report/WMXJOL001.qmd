@@ -162,7 +162,7 @@ legend(x = mean(usr[1:2]), y = usr[4], xjust = 0.5, yjust = 0,
 The conficence intervals (both BCa and percentile) do not include zero, indicating that the difference in medians is statistically significant. The BCa interval is slightly wider than the percentile interval, reflecting the bias and skewness correction applied by the BCa method.
 
 __Regression to determine the adjusted associations of quitting:__
-The adjusted linear regression estimated that quitters gained on average `r sprintf("%.2f", coef(model)["qsmk"])` kg more than non-quitters. @tbl-regression-boot compares three ways of estimating the uncertainty of this coefficient: the linear regression formula, the case bootstrap and the residual bootstrap. The conventional formula assumes that the errors are independent, normally distributed and have constant variance.
+The adjusted linear regression estimated that quitters gained on average `r sprintf("%.2f", coef(model)["qsmk"])` kg more than non-quitters. @tbl-regression-boot compares three ways of estimating the uncertainty of this coefficient: the conventional ordinary least squares (OLS) formula (the standard error reported by the linear regression), the case bootstrap and the residual bootstrap. The conventional formula assumes that the errors are independent, normally distributed and have constant variance.
 
 
 ```{r}
@@ -230,12 +230,12 @@ Monte Carlo error is the random variation in a bootstrap result caused by using 
 mc_summary_tab <- data.frame(
   B        = format(mc_summary$B, big.mark = "\u00a0"),
   SE       = sprintf("%.4f", mc_summary$SE_Range),
-  CI_Lower = sprintf("%.3f", mc_summary$Lower_CI_Range),
-  CI_Upper = sprintf("%.3f", mc_summary$Upper_CI_Range)
+  CI       = sprintf("(%.3f, %.3f)", mc_summary$Lower_CI_Range,
+                     mc_summary$Upper_CI_Range)
 )
 
-knitr::kable(mc_summary_tab, align = "rrrr", row.names = FALSE,
-             col.names = c("$B$", "SE", "95% CI lower limit", "95% CI upper limit"))
+knitr::kable(mc_summary_tab, align = "rrr", row.names = FALSE,
+             col.names = c("$B$", "SE", "95% CI (lower, upper)"))
 ```
 The variability between runs at $B$ = 5 000 was small, confirming that 5 000 replicates were sufficient for stable standard errors and confidence intervals in this analysis.
 
