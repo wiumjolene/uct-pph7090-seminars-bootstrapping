@@ -139,7 +139,7 @@ for (B in B_values) {
 }
 print(mc_results, digits = 4, row.names = FALSE)
 
-# Spread across the three runs for each value of B
+# Spread across the 20 runs for each value of B
 mc_summary <- aggregate(cbind(SE, CI_Lower, CI_Upper) ~ B,
                         data = mc_results,
                         FUN = function(x) diff(range(x)))

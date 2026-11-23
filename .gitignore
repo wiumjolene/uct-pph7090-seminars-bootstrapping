@@ -1,3 +1,51 @@
-/.vscode
+# =============================================================================
+# PPH7090S – Bootstrapping assignment
+# =============================================================================
+
+# ----- R ----------------------------------------------------------------------
+.Rhistory
+.RData
+.Rdata
+.Ruserdata
+.Rproj.user/
+*.Rproj
+.Renviron
+renv/library/
+renv/staging/
+
+# ----- Quarto / knitr build artefacts -----------------------------------------
+# Regenerated on every render; only the final PDF is kept under version control.
+.quarto/
+**/.quarto/
+*_cache/
+*_files/
+*.rmarkdown
+*.knit.md
+*.utf8.md
+*.typ
+!report/*.typ
+
+# ----- Backups and scratch copies ---------------------------------------------
+*.bak
+*.tmp
+*~
+* copy.*
+* copy
+
+# ----- AI drafts and notes ----------------------------------------------------
+/claude/
 claude_*
-/claude
+
+# ----- Course materials (not ours to redistribute) ----------------------------
+/classnotes/
+assignment_2026.pdf
+
+# ----- Editors and IDEs -------------------------------------------------------
+.vscode/
+.idea/
+*.swp
+
+# ----- Operating system -------------------------------------------------------
+.DS_Store
+Thumbs.db
+desktop.ini
