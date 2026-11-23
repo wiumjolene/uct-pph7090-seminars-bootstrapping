@@ -1,8 +1,8 @@
-# How to make an average of a sample represent the population with Bootstrapping
+# How sure is your average? A gentle intro to confident bootstrapping
 
 Nov 23, 2026 · Jolene Wium
 
-*"Repetition is the mother of learning" - my squash coach from 2004.*
+*"Repetition is the mother of learning" - my squash coach from 2004 quoting latin phrases.*
 
 How much does the average Border Collie in South Africa weigh?
 
@@ -10,20 +10,20 @@ I could weigh Sky, my Border Collie, and ask another 54 owners to weigh theirs. 
 
 ![Sky, my border collie, above a grid of 55 collie photos: 'A sample of 55 collies'](sky-collie-sample.jpg)
 
-In statistics, we usually work with a sample that stands in for a broader population. Sometimes you can measure every member of the population, such as the grades of every child in a particular class. Often, that's simply not practical. Take a question close to my heart (Sky above): how much does the average border collie in South Africa weigh? There's no way to put every collie in the country on a scale. So say I send a survey to the Border Collie Club of South Africa and 55 owners reply with their dog's weight. Those 55 dogs are my sample, and their average weight is my best guess for all border collies.
+In statistics, we usually work with a sample that stands in for a population. Sometimes you can measure every member of the population, such as the grades of every child in a particular class. Often, that's simply not practical. Take a question close to my heart (Sky above): how much does the average border collie in South Africa weigh? There's no way to put every collie in the country on a scale. So say I send a survey to the Border Collie Club of South Africa and 55 owners reply with their dog's weight. Those 55 dogs are my sample, and their average weight is my best guess for all border collies.
 
 The catch is that a sample is never a perfect copy of the population. If a different 55 owners had replied, I'd get a slightly different average, purely by chance. A sample can also be biased: club members might keep their dogs leaner than the average pet owner, or owners of farm dogs might never see the survey. Either way, the average on its own isn't enough. If my 55 collies average, say, 18 kg, is the true average give or take 0.2 kg, or give or take 3 kg? We need to report how far off it could plausibly be.
 
-I recently did an assignment on a technique that answers exactly this question, called bootstrapping, and I enjoyed the ideas behind it so much that I wanted to share it online. Bootstrapping literally means pulling yourself up by your own bootstraps, an impossible task. It's the same as making data sense out of nothing.
+I recently did an assignment on a technique that answers exactly this question, called bootstrapping, and I enjoyed the ideas behind it so much that I wanted to share it online. Bootstrapping literally means pulling yourself up by your own bootstraps, an impossible task. It's the same as making data make sense out of nothing.
 
 
 ## The idea behind bootstrapping
 
-The trick goes like this: you only have one sample. Draw a new "fake" sample from your original sample *with replacement* (so some dogs get picked twice and some not at all), calculate your statistic, and repeat that thousands of times. The spread of all those recalculated answers tells you how much your original answer could have wobbled just by the luck of who ended up in your sample.
+The trick goes like this: you start with your sample. Draw a new "fake" sample from your original sample *with replacement* (so some dogs get picked twice and some not at all), calculate your statistic, and repeat that thousands of times. The spread of all those recalculated answers tells you how much your original answer could have wobbled just by the luck of who ended up in your sample.
 
 Nothing special. Just your sample data and a lot of repetition.
 
-Back to the collies. Picture writing each of the 55 weights on a slip of paper and putting them in a hat. Draw a slip, note the weight, put the slip back, and repeat until you have 55 weights. Some dogs will turn up twice or three times, and some won't turn up at all. Work out the average of this new "survey". Then do it again, 5,000 times (R does this in under a second). Each round is a slightly different set of replies the club could plausibly have sent. The middle 95% of those 5,000 averages gives a confidence interval for the average weight of South African border collies, and nobody had to weigh another dog.
+Picture writing each of the 55 weights on a slip of paper and putting them in a hat. Draw a slip, note the weight, put the slip back, and repeat until you have 55 weights. Some dogs will turn up twice or three times, and some won't turn up at all. Work out the average of this new "survey". Then do it again, 5,000 times (R does this in under a second). Each round is a slightly different set of replies the club could plausibly have sent. The middle 95% of those 5,000 averages gives a confidence interval for the average weight of South African border collies, and nobody had to weigh another dog.
 
 ## Why we need bootstrapping and why do we need to know the variability
 
