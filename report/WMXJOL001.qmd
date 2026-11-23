@@ -18,7 +18,7 @@ format:
         #show raw.where(block: true): set text(size: 7.5pt)
         #set text(fill: rgb("#053259"))
         #show place.where(scope: "parent"): set par(justify: false)
-        #show heading: set text(fill: rgb("#053259"))
+        #show heading: set text(fill: rgb("#FA615C"))
         #show heading.where(level: 2): set text(fill: rgb("#1668A3"))
         #show heading.where(level: 3): set text(fill: rgb("#1668A3"))
         #show link: set text(fill: rgb("#1668A3"))
@@ -94,7 +94,7 @@ The AI tool did not generate findings, nor did it substitute for my own analysis
 # Introduction
 <!-- > _Estimate the difference in weight change between quitters and non-quitters, and its uncertainty, in situations where the standard formulas either don’t exist or might not be appropriate._ -->
 
-This report uses bootstrapping to estimate the uncertainty in the difference in weight change between participants who quit smoking and those who continued smoking. Bootstrapping avoids the need for a complex formula and provides an alternative way to calculate standard errors and confidence intervals. Bootstrapping is also used to check the standard errors from a regression model adjusted for baseline characteristics, because the conventional formula assumes that the error variance is equal for all participants.
+This report uses bootstrapping to estimate uncertainty in the difference in weight change between participants who quit smoking and those who continued smoking (non-quitters). Bootstrapping provides an alternative to complex formula to calculate standard errors and confidence intervals. Bootstrapping is also used to check the standard errors from a regression model adjusted for baseline characteristics.
 
 The methods section describes how bootstrapping is used for this analysis. The results section presents the findings, and the discussion section interprets the results and discusses study limitations.
 
