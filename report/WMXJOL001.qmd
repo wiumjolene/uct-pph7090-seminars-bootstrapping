@@ -123,69 +123,51 @@ Next, the results of the analysis are presented.
 Of the `r n_total` participants that were included in the analysis, `r n_quit` (`r round(100 * n_quit / n_total, 1)`%) quit smoking while `r n_cont` participants continued smoking until 1982. The median weight change was `r round(med_diff, 2)` kg higher among those who quit smoking (`r round(med_quit, 2)` kg) than those who continued smoking (`r round(med_cont, 2)` kg). Baseline characteristics of quitters and non-quitters are shown in @tbl-baseline ([Appendix A](#sec-appendix-baseline)) and indicate an older age among quitters with non-quitters smoking on average 21.2 cigarettes per day compared to 18.6 cigarettes per day among quitters.
 
 __Bootstrapping the difference in medians:__
-The observed difference in median weight change between quitters and non-quitters was `r round(median_boot$t0, 2)` kg. Bootstrapping gave a standard error of `r round(median_se, 2)` kg. The 95% confidence interval for the difference in medians was `r sprintf("%.2f to %.2f", median_ci$percent[4], median_ci$percent[5])` kg using the percentile method and `r sprintf("%.2f to %.2f", median_ci$bca[4], median_ci$bca[5])` kg using the bias-corrected and accelerated (BCa) method (@tbl-median-boot, @fig-median-boot).
-
-```{r}
-#| label: tbl-median-boot
-#| tbl-cap: 'Bootstrap estimates for the difference in median weight change'
-#| echo: false
-
-library(knitr)
-library(kableExtra)
-
-median_table <- data.frame(
-  Estimate = sprintf("%.2f", median_boot$t0),
-  Bias     = sprintf("%.3f", mean(median_boot$t[, 1]) - median_boot$t0),
-  SE       = sprintf("%.3f", median_se),
-  CI_perc  = sprintf("(%.2f, %.2f)", median_ci$percent[4], median_ci$percent[5]),
-  CI_bca   = sprintf("(%.2f, %.2f)", median_ci$bca[4], median_ci$bca[5])
-)
-
-tab <- kable(median_table, align = "rrrrr", booktabs = TRUE, row.names = FALSE,
-             col.names = c("Estimate (kg)", "Bias", "SE",
-                           "95% CI (percentile)", "95% CI (BCa)"))
-
-if (knitr::is_html_output() || knitr::is_latex_output()) {
-  tab <- tab |>
-    kable_styling(full_width = FALSE, latex_options = "HOLD_position") |>
-    row_spec(0, bold = TRUE, color = "white", background = "#053259")
-}
-
-tab
-```
-
-The bootstrap distribution of the median difference is shown in @fig-median-boot, indicationg a non-smooth distribution.
+The observed difference in median weight change between quitters and non-quitters was `r round(median_boot$t0, 2)` kg. Bootstrapping gave a standard error of `r round(median_se, 2)` kg. The 95% confidence interval for the difference in medians was `r sprintf("%.2f to %.2f", median_ci$percent[4], median_ci$percent[5])` kg using the percentile method and `r sprintf("%.2f to %.2f", median_ci$bca[4], median_ci$bca[5])` kg using the bias-corrected and accelerated (BCa) method. The bootstrap distribution of the median difference is shown in @fig-median-boot, indicating a non-smooth distribution.
 
 ```{r}
 #| label: fig-median-boot
 #| fig-cap: 'Bootstrap distribution of the difference in median weight change'
 #| fig-width: 6
 #| fig-height: 3.5
-#| out-width: "75%"
+#| out-width: "80%"
 #| echo: false
 
 par(col.main = unname(uct_cols["navy"]), col.lab = unname(uct_cols["navy"]),
-    col.axis = unname(uct_cols["navy"]), fg = unname(uct_cols["navy"]))
+    col.axis = unname(uct_cols["navy"]), fg = unname(uct_cols["navy"]),
+    mar = c(4, 4, 2, 1))   # smaller top margin: just enough room for the legend
 
 hist(median_boot$t[, 1], breaks = 40, col = uct_cols["blue"],
      border = "white", main = "", xlim = range(c(0, median_boot$t[, 1])),
      xlab = "Difference in median weight change (kg)")
 abline(v = median_boot$t0, col = uct_cols["magenta"], lwd = 2)
-abline(v = 0, lty = 2, col = uct_cols["steel"], lwd = 2)
+
+# 95% confidence limits: percentile (dashed) and BCa (dotted)
+abline(v = median_ci$percent[4:5], col = uct_cols["teal"],  lwd = 2, lty = 2)
+abline(v = median_ci$bca[4:5],     col = uct_cols["amber"], lwd = 2, lty = 3)
+
+# Legend in one row, centred just above the plotting area
+usr <- par("usr")
+legend(x = mean(usr[1:2]), y = usr[4], xjust = 0.5, yjust = 0,
+       xpd = NA, horiz = TRUE, bty = "n", cex = 0.7, lwd = 2, seg.len = 1.8,
+       col = uct_cols[c("magenta", "teal", "amber")],
+       lty = c(1, 2, 3),
+       legend = c(sprintf("Observed (%.2f kg)", median_boot$t0),
+                  sprintf("Percentile 95%% CI (%.2f, %.2f)",
+                          median_ci$percent[4], median_ci$percent[5]),
+                  sprintf("BCa 95%% CI (%.2f, %.2f)",
+                          median_ci$bca[4], median_ci$bca[5])))
 ```
 
+The conficence intervals (both BCa and percentile) do not include zero, indicating that the difference in medians is statistically significant. The BCa interval is slightly wider than the percentile interval, reflecting the bias and skewness correction applied by the BCa method.
 
 __Regression to determine the adjusted associations of quitting:__
 The adjusted linear regression estimated that quitters gained on average `r sprintf("%.2f", coef(model)["qsmk"])` kg more than non-quitters. @tbl-regression-boot compares three ways of estimating the uncertainty of this coefficient: the linear regression formula, the case bootstrap and the residual bootstrap. The conventional formula assumes that the errors are independent, normally distributed and have constant variance.
 
-The case bootstrap resamples whole participants with replacement, treating the predictors as random. The model was refitted to 5000 resamples, and the spread of the `qsmk` coefficients was used to estimate the standard error. Because it does not assume constant variance, it remains valid under heteroscedasticity. In this analysis it produced a slightly wider confidence interval than the other two methods.
-
-The residual bootstrap treats the predictors as fixed at their observed values. Residuals from the fitted model are resampled with replacement, added back to the fitted values, and the model is refitted, again 5000 times. It does not assume normality, but it does assume that the model is correctly specified and that the errors are independent and identically distributed, which implies constant variance. In this analysis its confidence interval was slightly narrower than that of the case bootstrap.
-
 
 ```{r}
 #| label: tbl-regression-boot
-#| tbl-cap: 'Adjusted associations of quitting smoking on weight change`#linebreak()`{=typst}`#text(size: 0.85em, style: "italic")[Conventional vs bootstrap standard errors; R = 5000, percentile 95% CIs for bootstrap methods]`{=typst}'
+#| tbl-cap: 'Adjusted associations of quitting smoking on weight change'
 #| echo: false
 
 comparison_tab <- data.frame(
@@ -198,6 +180,12 @@ comparison_tab <- data.frame(
 knitr::kable(comparison_tab, align = "lrrr", row.names = FALSE,
              col.names = c("Method", "Estimate (kg)", "SE", "95% CI"))
 ```
+
+The case bootstrap resamples whole participants with replacement, treating the predictors as random. The model was refitted to 5 000 resamples, and the spread of the `qsmk` coefficients was used to estimate the standard error. Case bootstrap does not assume constant variance and remains valid under heteroscedasticity. In this analysis it produced a slightly wider confidence interval than the other two methods.
+
+The residual bootstrap treats the predictors as fixed at their observed values. Residuals from the fitted model are resampled with replacement, added back to the fitted values, and the model is refitted, again 5 000 times. It does not assume normality, but it does assume that the model is correctly specified and that the errors are independent and identically distributed, which implies constant variance. In this analysis its confidence interval was slightly narrower than that of the case bootstrap.
+
+
 @fig-resid illustrates the residual diagnostics for the regression model.  The right panel shows the residuals by smoking status.
 
 ```{r}
